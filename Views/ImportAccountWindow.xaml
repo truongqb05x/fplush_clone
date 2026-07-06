@@ -1,0 +1,122 @@
+<Window x:Class="FPlusClone.Views.ImportAccountWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:FPlusClone.Views"
+        Title="Import Account" Height="600" Width="1000"
+
+        WindowStartupLocation="CenterOwner"
+        Background="White" BorderThickness="1" BorderBrush="#00bfff">
+    <Window.Resources>
+        <local:MappingToVisibilityConverter x:Key="MappingToVisibilityConverter"/>
+    </Window.Resources>
+
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Title -->
+            <RowDefinition Height="Auto"/> <!-- Label -->
+            <RowDefinition Height="120"/>  <!-- Input -->
+            <RowDefinition Height="Auto"/> <!-- Mapping -->
+            <RowDefinition Height="*"/>     <!-- Preview Area -->
+            <RowDefinition Height="Auto"/> <!-- Buttons -->
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Import Account" FontSize="20" FontWeight="SemiBold" Foreground="#333" Margin="0,0,0,10"/>
+        
+        <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,5">
+            <TextBlock Text="Dữ liệu đầu vào" FontSize="12" Foreground="#666" VerticalAlignment="Center"/>
+            <CheckBox Content="Định dạng thông minh (Auto Detect)" IsChecked="{Binding IsSmartMode}" Margin="20,0,0,0" VerticalAlignment="Center" Cursor="Hand" Foreground="#00bfff" FontWeight="SemiBold"/>
+        </StackPanel>
+
+        <TextBox Grid.Row="2" Text="{Binding RawData, UpdateSourceTrigger=PropertyChanged}" 
+                 AcceptsReturn="True" VerticalScrollBarVisibility="Auto"
+                 BorderBrush="#ccc" BorderThickness="1" Padding="5" FontSize="12"/>
+
+        <!-- Column Mapping Dropdowns/Labels -->
+        <ItemsControl Grid.Row="3" ItemsSource="{Binding SelectedMappings}" Margin="0,10,0,0">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Grid Width="100" Margin="0,0,0,0">
+                        <!-- Dropdown for Manual Mode -->
+                        <ComboBox IsReadOnly="False" 
+                                  ItemsSource="{Binding DataContext.ColumnOptions, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                  SelectedItem="{Binding SelectedValue, UpdateSourceTrigger=PropertyChanged}"
+                                  Height="28" Margin="0,0,2,0">
+                            <ComboBox.Style>
+                                <Style TargetType="ComboBox">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsSmartMode, RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </ComboBox.Style>
+                        </ComboBox>
+
+                        <!-- Label for Smart Mode -->
+                        <Border Background="#f0f0f0" BorderBrush="#ccc" BorderThickness="1" 
+                                CornerRadius="2" Height="28" Margin="0,0,2,0">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding DataContext.IsSmartMode, RelativeSource={RelativeSource AncestorType=ItemsControl}}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <TextBlock Text="{Binding SelectedValue}" VerticalAlignment="Center" HorizontalAlignment="Center" 
+                                       FontWeight="SemiBold" Foreground="#444"/>
+                        </Border>
+                    </Grid>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+
+        <!-- Preview Area (DataGrid) -->
+        <Border Grid.Row="4" BorderBrush="#00bfff" BorderThickness="0,1,0,0" Margin="0,2,0,10">
+            <DataGrid ItemsSource="{Binding PreviewData}" 
+                      AutoGenerateColumns="False" 
+                      HeadersVisibility="None"
+                      GridLinesVisibility="All"
+                      CanUserAddRows="False"
+                      IsReadOnly="True"
+                      Background="White"
+                      BorderThickness="0">
+                <DataGrid.Resources>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                        <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}"/>
+                    </Style>
+                </DataGrid.Resources>
+
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="UID" Binding="{Binding Col0}" Width="100" Visibility="{Binding DataContext.SelectedMappings[0], RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource MappingToVisibilityConverter}}"/>
+                    <DataGridTextColumn Header="Pass" Binding="{Binding Col1}" Width="100" Visibility="{Binding DataContext.SelectedMappings[1], RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource MappingToVisibilityConverter}}"/>
+                    <DataGridTextColumn Header="Cookie" Binding="{Binding Col2}" Width="100" Visibility="{Binding DataContext.SelectedMappings[2], RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource MappingToVisibilityConverter}}"/>
+                    <DataGridTextColumn Header="Token" Binding="{Binding Col3}" Width="100" Visibility="{Binding DataContext.SelectedMappings[3], RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource MappingToVisibilityConverter}}"/>
+                    <DataGridTextColumn Header="None1" Binding="{Binding Col4}" Width="100" Visibility="{Binding DataContext.SelectedMappings[4], RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource MappingToVisibilityConverter}}"/>
+                    <DataGridTextColumn Header="Passemail" Binding="{Binding Col5}" Width="100" Visibility="{Binding DataContext.SelectedMappings[5], RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource MappingToVisibilityConverter}}"/>
+                    <DataGridTextColumn Header="None2" Binding="{Binding Col6}" Width="100" Visibility="{Binding DataContext.SelectedMappings[6], RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource MappingToVisibilityConverter}}"/>
+                    <DataGridTextColumn Header="None3" Binding="{Binding Col7}" Width="100" Visibility="{Binding DataContext.SelectedMappings[7], RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource MappingToVisibilityConverter}}"/>
+                    <DataGridTextColumn Header="None4" Binding="{Binding Col8}" Width="100" Visibility="{Binding DataContext.SelectedMappings[8], RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource MappingToVisibilityConverter}}"/>
+                    <DataGridTextColumn Header="None5" Binding="{Binding Col9}" Width="100" Visibility="{Binding DataContext.SelectedMappings[9], RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource MappingToVisibilityConverter}}"/>
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+
+        <!-- Footer Buttons -->
+        <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Import" Command="{Binding ImportCommand}" 
+                    Width="100" Height="30"
+                    Background="#f5f5f5" BorderBrush="#ccc" BorderThickness="1"
+                    FontSize="12" Cursor="Hand"/>
+        </StackPanel>
+    </Grid>
+</Window>

@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <Nullable>disable</Nullable>
+
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <ApplicationIcon>Resources\facebook_logo.ico</ApplicationIcon>
+    <AssemblyName>FacebookAccountManager</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\facebook_logo.ico" />
+  </ItemGroup>
+</Project>
+

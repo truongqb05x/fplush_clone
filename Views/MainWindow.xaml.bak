@@ -1,0 +1,202 @@
+<Window x:Class="FPlusClone.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="clr-namespace:FPlusClone.ViewModels"
+        Title="FPlus - Phần mềm tự động đăng tin facebook" Height="700" Width="1100">
+    <Window.DataContext>
+        <vm:MainViewModel/>
+    </Window.DataContext>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/> <!-- Status Bar -->
+            <RowDefinition Height="Auto"/> <!-- Main Tabs -->
+            <RowDefinition Height="Auto"/> <!-- Sub Tabs -->
+            <RowDefinition Height="*"/>    <!-- Main Content -->
+            <RowDefinition Height="Auto"/> <!-- Bottom Actions -->
+            <RowDefinition Height="Auto"/> <!-- Footer -->
+        </Grid.RowDefinitions>
+
+        <!-- Top Blue Status Bar -->
+        <Border Grid.Row="0" Background="#f8f9fa" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="10,5">
+            <DockPanel>
+                <Rectangle Fill="#1a73e8" Width="24" Height="24" RadiusX="12" RadiusY="12" DockPanel.Dock="Left" Margin="0,0,10,0"/>
+                <TextBlock Text="FPlus - Phần mềm tự động đăng tin facebook" VerticalAlignment="Center" FontWeight="Bold" Foreground="#444"/>
+
+
+            </DockPanel>
+        </Border>
+
+        <!-- Main Navigation Bar -->
+        <Border Grid.Row="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" Margin="5">
+                <Button Content="Home" Padding="20,10" Background="Transparent" BorderThickness="0"/>
+                <Button Content="Đăng Nhập FB" Padding="20,10" Background="Transparent" BorderThickness="0"/>
+                <Button Content="FPlus Chrome" Padding="20,10" Background="#1a73e8" Foreground="White" BorderThickness="0"/>
+                <Button Content="FPlus Token" Padding="20,10" Background="Transparent" BorderThickness="0"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Sub Tabs Area -->
+        <Border Grid.Row="2" Background="#f1f3f4" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
+            <StackPanel Orientation="Horizontal" Margin="5,0">
+                <!-- Dynamic Tabs List -->
+                <ItemsControl ItemsSource="{Binding ActiveTabs}">
+                    <ItemsControl.ItemsPanel>
+                        <VirtualizingStackPanel Orientation="Horizontal"/>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding Header}" Style="{StaticResource TabHeaderButton}" Command="{Binding DataContext.SelectTabCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                
+                <!-- Add Tab Button (+) -->
+                <Button Content="+" Width="30" Height="30" Margin="5,5,0,0" 
+                        Background="Transparent" BorderThickness="0" 
+                        FontSize="18" FontWeight="Bold" Foreground="#1a73e8"
+                        Command="{Binding ToggleModalCommand}"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Main Content Area -->
+        <Grid Grid.Row="3">
+            <!-- Account Management View (Visible only when its tab is selected) -->
+            <Grid Margin="10">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsAccountTabSelected}" Value="True">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+
+                    </Style>
+                </Grid.Style>
+                
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="180"/>
+                </Grid.ColumnDefinitions>
+
+                <DockPanel Grid.Column="0">
+                    <!-- Input Area -->
+                    <GroupBox Header="Danh sách tài khoản (mỗi dòng 1 tài khoản)" DockPanel.Dock="Top" Margin="0,0,0,10">
+                        <TextBox Height="80" TextWrapping="Wrap" AcceptsReturn="True" BorderBrush="{StaticResource BorderBrush}"/>
+                    </GroupBox>
+
+                    <!-- Filters -->
+                    <Border DockPanel.Dock="Top" Margin="0,0,0,10" Padding="5" Background="#f8f9fa" BorderBrush="{StaticResource BorderBrush}" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Lọc: " VerticalAlignment="Center"/>
+                            <ComboBox Width="100" Margin="5,0"/>
+                            <TextBlock Text="Tìm kiếm: " VerticalAlignment="Center" Margin="10,0,5,0"/>
+                            <TextBox Width="150"/>
+                            <Button Content="Tìm" Margin="5,0" Width="40"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- DataGrid -->
+                    <DataGrid ItemsSource="{Binding Accounts}" Style="{StaticResource ModernDataGrid}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="#" Binding="{Binding Index}" Width="30"/>
+                            <DataGridTextColumn Header="UserName" Binding="{Binding UserName}" Width="100"/>
+                            <DataGridTextColumn Header="Uid" Binding="{Binding Uid}" Width="120"/>
+                            <DataGridTextColumn Header="Tên" Binding="{Binding Name}" Width="100"/>
+                            <DataGridTextColumn Header="Status" Binding="{Binding Status}" Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding Status}" Value="Live">
+                                                <Setter Property="Background" Value="{StaticResource StatusLiveBrush}"/>
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding Status}" Value="Confirm Email">
+                                                <Setter Property="Background" Value="{StaticResource StatusErrorBrush}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Cookie" Binding="{Binding Cookie}" Width="*"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+
+                <!-- Right Controls -->
+                <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                    <Button Content="Thêm" Margin="0,0,0,5" Style="{StaticResource ModernButton}"/>
+                    <Button Content="Login Chrome" Margin="0,0,0,5" Style="{StaticResource ModernButton}"/>
+                    <Button Content="Import Custom" Margin="0,0,0,20" Style="{StaticResource ModernButton}"/>
+                    
+                    <TextBlock Text="Threads" Margin="0,0,0,5"/>
+                    <TextBox Text="2" Width="60" HorizontalAlignment="Left" Margin="0,0,0,10"/>
+                    
+                    <Button Content="Kill Chrome" Style="{StaticResource ModernButton}" Margin="0,100,0,5"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- Placeholder for other tabs -->
+            <Grid HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid.Style>
+                    <Style TargetType="Grid">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsAccountTabSelected}" Value="False">
+                                <Setter Property="Visibility" Value="Visible"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+
+                    </Style>
+                </Grid.Style>
+                <TextBlock Text="Nội dung chức năng đang được phát triển..." FontSize="16" Foreground="#999"/>
+            </Grid>
+        </Grid>
+
+        <!-- ADD TAB MODAL OVERLAY -->
+        <Border Grid.Row="0" Grid.RowSpan="6" Panel.ZIndex="1000">
+            <Border.Style>
+                <Style TargetType="Border" BasedOn="{StaticResource ModalBackground}">
+
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding ShowAddTabModal}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            
+            <Border Style="{StaticResource ModalContent}">
+                <StackPanel>
+                    <TextBlock Text="Thêm chức năng mới" FontSize="18" FontWeight="Bold" Margin="0,0,0,15"/>
+                    
+                    <TextBlock Text="Chọn chức năng:" Margin="0,0,0,5"/>
+                    <ComboBox ItemsSource="{Binding AvailableFunctions}" 
+                              SelectedItem="{Binding SelectedFunction}"
+                              DisplayMemberPath="Name"
+                              Margin="0,0,0,15"/>
+                    
+                    <Border Background="#f8f9fa" Padding="10" Margin="0,0,0,20" MinHeight="60">
+                        <TextBlock Text="{Binding SelectedFunction.Description}" TextWrapping="Wrap" Foreground="#666" FontStyle="Italic"/>
+                    </Border>
+                    
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <Button Content="Hủy" Command="{Binding ToggleModalCommand}" Width="80" Margin="0,0,10,0" Style="{StaticResource ModernButton}"/>
+                        <Button Content="Xác nhận" Command="{Binding AddTabCommand}" Width="100" Background="#1a73e8" Foreground="White" FontWeight="Bold" BorderThickness="0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Border>
+
+
+        <!-- Bottom Footer Info -->
+        <Border Grid.Row="5" Background="#f1f3f4" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="10,2">
+            <DockPanel>
+                <TextBlock Text="Hỗ trợ: 090.173.1871 | Plus24h.com" VerticalAlignment="Center"/>
+                <TextBlock Text="Version 4.9.0.7" DockPanel.Dock="Right" VerticalAlignment="Center"/>
+            </DockPanel>
+        </Border>
+    </Grid>
+</Window>
+

@@ -1,0 +1,60 @@
+<Window x:Class="FPlusClone.Views.CopyCustomWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Copy Custom Format" Height="450" Width="900"
+
+        WindowStartupLocation="CenterOwner"
+        Background="White" BorderThickness="1" BorderBrush="{DynamicResource PrimaryBlueBrush}">
+    
+    <Window.Resources>
+        <ResourceDictionary Source="/Resources/Styles.xaml"/>
+    </Window.Resources>
+
+    <Grid Margin="20">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Định dạng copy tùy chỉnh" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15"/>
+
+        <TextBlock Grid.Row="1" Text="Chọn các trường và thứ tự (ngăn cách bởi dấu |)" Foreground="#666" Margin="0,0,0,5"/>
+        
+        <!-- Column Mapping Dropdowns -->
+        <ItemsControl Grid.Row="2" ItemsSource="{Binding SelectedMappings}" Margin="0,0,0,20">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <ComboBox ItemsSource="{Binding DataContext.ColumnOptions, RelativeSource={RelativeSource AncestorType=Window}}"
+                              SelectedItem="{Binding SelectedValue, UpdateSourceTrigger=PropertyChanged}"
+                              Width="75" Height="28" Margin="0,0,2,0">
+
+                        <!-- We need a way to trigger UpdatePreview when selection changes. 
+                             In a simple app, we can use a Refresh button or event-to-command binding. -->
+                    </ComboBox>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <GroupBox Grid.Row="3" Header="Preview (Dòng đầu tiên)" Margin="0,0,0,15">
+            <TextBox Text="{Binding PreviewText, Mode=OneWay}" IsReadOnly="True" 
+                     TextWrapping="Wrap" BorderThickness="0" Background="#f9f9f9" 
+                     Padding="10" VerticalScrollBarVisibility="Auto" AcceptsReturn="True"
+                     FontSize="13" FontFamily="Consolas"/>
+        </GroupBox>
+
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Cập nhật Preview" Click="Refresh_Click" Style="{StaticResource ModernButton}" Margin="0,0,10,0" Width="120" Background="#eee"/>
+            <Button Content="Copy" Command="{Binding CopyCommand}" Style="{StaticResource ModernButton}" Width="100" Background="{DynamicResource PrimaryBlueBrush}" Foreground="White" BorderThickness="0"/>
+        </StackPanel>
+    </Grid>
+</Window>
