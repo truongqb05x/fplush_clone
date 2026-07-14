@@ -43,10 +43,16 @@ namespace FPlusClone.ViewModels
             set
             {
                 if (SetProperty(ref _isSmartMode, value))
-                {
                     UpdatePreview();
-                }
             }
+        }
+
+        private string _importNote;
+        /// <summary>Ghi chú áp dụng cho toàn bộ tài khoản được import lần này.</summary>
+        public string ImportNote
+        {
+            get => _importNote;
+            set => SetProperty(ref _importNote, value);
         }
 
         public ObservableCollection<string> ColumnOptions { get; }
@@ -56,6 +62,7 @@ namespace FPlusClone.ViewModels
 
         public ICommand ImportCommand { get; }
         public ICommand CloseCommand { get; }
+        public ICommand GenerateRandomNoteCommand { get; }
 
         public event Action<List<FacebookAccount>> AccountsImported;
         public event Action RequestClose;
@@ -80,6 +87,15 @@ namespace FPlusClone.ViewModels
 
             ImportCommand = new RelayCommand(_ => ExecuteImport());
             CloseCommand = new RelayCommand(_ => RequestClose?.Invoke());
+            GenerateRandomNoteCommand = new RelayCommand(_ => ImportNote = GenerateRandomNote());
+        }
+
+        private static readonly Random _rng = new Random();
+        private string GenerateRandomNote()
+        {
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            var suffix = new string(Enumerable.Range(0, 6).Select(_ => chars[_rng.Next(chars.Length)]).ToArray());
+            return $"Batch_{DateTime.Now:yyyyMMdd}_{suffix}";
         }
 
 
@@ -274,6 +290,9 @@ namespace FPlusClone.ViewModels
                 {
                     acc.Status = "Live";
                     acc.Folder = "default";
+                    // Áp dụng note chung nếu account chưa có note riêng từ data
+                    if (string.IsNullOrEmpty(acc.Note) && !string.IsNullOrEmpty(ImportNote))
+                        acc.Note = ImportNote;
                     accounts.Add(acc);
                 }
             }

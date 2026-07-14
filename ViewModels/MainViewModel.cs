@@ -21,6 +21,7 @@ namespace FPlusClone.ViewModels
         private bool _isBulkOperation = false;
         private bool _isBulkSelecting = false;  // suppress SelectedCount spam khi select all
         private readonly string _filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "accounts.json");
+        private readonly string _backupFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "accounts_deleted_backup.json");
 
         public ObservableCollection<FolderStat> FolderStatistics { get; } = new ObservableCollection<FolderStat>();
 
@@ -365,6 +366,7 @@ namespace FPlusClone.ViewModels
 
                         if (result == System.Windows.MessageBoxResult.Yes)
                         {
+                            BackupDeletedAccounts(itemsToRemove, "Xóa chọn");
                             _isBulkOperation = true;
                             IsLoading = true;
                             ProgressMessage = "Đang xóa tài khoản...";
@@ -407,15 +409,30 @@ namespace FPlusClone.ViewModels
 
             DeleteAllAccountsCommand = new RelayCommand(_ =>
             {
-                if (Accounts.Count > 0)
+                bool isAllFolder = SelectedFolder == "All Folder" || string.IsNullOrEmpty(SelectedFolder);
+                var accountsToDelete = isAllFolder
+                    ? Accounts.ToList()
+                    : Accounts.Where(a => a.Folder == SelectedFolder).ToList();
+
+                if (accountsToDelete.Count == 0) return;
+
+                string warningMsg = isAllFolder
+                    ? $"Bạn sắp xóa TOÀN BỘ {accountsToDelete.Count} tài khoản trên tất cả folder.\n\nSau khi xóa, dữ liệu sẽ không thể khôi phục qua ứng dụng."
+                    : $"Bạn sắp xóa tất cả {accountsToDelete.Count} tài khoản trong folder:\n\n   📁 {SelectedFolder}\n\nSau khi xóa, dữ liệu sẽ không thể khôi phục qua ứng dụng.";
+
+                var dialog = new Views.DangerConfirmDialog(warningMsg, System.Windows.Application.Current.MainWindow);
+                dialog.ShowDialog();
+
+                if (dialog.Confirmed)
                 {
-                    if (System.Windows.MessageBox.Show("Xác nhận xóa TOÀN BỘ tài khoản?", "Xác nhận", System.Windows.MessageBoxButton.YesNo) == System.Windows.MessageBoxResult.Yes)
-                    {
-                        Accounts.Clear();
-                        SaveAccounts();
-                        UpdateFolderStatistics();
-                        Log("System: Deleted all accounts.");
-                    }
+                    BackupDeletedAccounts(accountsToDelete, isAllFolder ? "Xóa tất cả" : $"Xóa folder '{SelectedFolder}'");
+                    foreach (var acc in accountsToDelete)
+                        Accounts.Remove(acc);
+                    SaveAccounts();
+                    UpdateFolderStatistics();
+                    Log(isAllFolder
+                        ? "System: Deleted all accounts."
+                        : $"System: Deleted all accounts in folder '{SelectedFolder}'.");
                 }
             });
 
@@ -577,6 +594,48 @@ namespace FPlusClone.ViewModels
                 File.WriteAllText(_filePath, JsonSerializer.Serialize(state, new JsonSerializerOptions { WriteIndented = true }));
             }
             catch (Exception ex) { Log($"Error saving data: {ex.Message}"); }
+        }
+
+        /// <summary>
+        /// Lưu danh sách tài khoản bị xóa vào file backup riêng (append, không ghi đè).
+        /// Mỗi bản ghi kèm thời điểm xóa và lý do để dễ khôi phục.
+        /// </summary>
+        private void BackupDeletedAccounts(List<FacebookAccount> accounts, string reason)
+        {
+            if (accounts == null || accounts.Count == 0) return;
+            try
+            {
+                // Đọc dữ liệu cũ nếu file đã tồn tại
+                var existingRecords = new List<DeletedAccountRecord>();
+                if (File.Exists(_backupFilePath))
+                {
+                    try
+                    {
+                        var raw = File.ReadAllText(_backupFilePath);
+                        existingRecords = JsonSerializer.Deserialize<List<DeletedAccountRecord>>(raw)
+                                          ?? new List<DeletedAccountRecord>();
+                    }
+                    catch { /* file lỗi thì bắt đầu list mới */ }
+                }
+
+                // Append các bản ghi mới
+                var now = DateTime.Now;
+                foreach (var acc in accounts)
+                {
+                    existingRecords.Add(new DeletedAccountRecord
+                    {
+                        DeletedAt = now,
+                        Reason = reason,
+                        Account = acc
+                    });
+                }
+
+                File.WriteAllText(_backupFilePath,
+                    JsonSerializer.Serialize(existingRecords, new JsonSerializerOptions { WriteIndented = true }));
+
+                Log($"System: Backed up {accounts.Count} deleted account(s) → accounts_deleted_backup.json");
+            }
+            catch (Exception ex) { Log($"Error backing up deleted accounts: {ex.Message}"); }
         }
 
         private string FormatAccountSimple(FacebookAccount acc, string format)
@@ -773,5 +832,16 @@ namespace FPlusClone.ViewModels
     {
         private string _name; public string Name { get => _name; set => SetProperty(ref _name, value); }
         private int _count; public int Count { get => _count; set => SetProperty(ref _count, value); }
+    }
+
+    /// <summary>
+    /// Bản ghi lưu tài khoản đã bị xóa kèm thời điểm và lý do xóa.
+    /// Được append vào file accounts_deleted_backup.json để phục hồi khi cần.
+    /// </summary>
+    public class DeletedAccountRecord
+    {
+        public DateTime DeletedAt { get; set; }
+        public string Reason { get; set; }
+        public FacebookAccount Account { get; set; }
     }
 }
