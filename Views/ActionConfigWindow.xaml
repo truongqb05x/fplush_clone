@@ -1,7 +1,10 @@
 <Window x:Class="FPlusClone.Views.ActionConfigWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Cài đặt hành động" Height="300" Width="400" WindowStartupLocation="CenterOwner" Background="#f0f0f0">
+        Title="Cài đặt hành động trước/sau bình luận" Height="480" Width="420" WindowStartupLocation="CenterOwner" Background="#f0f0f0">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis"/>
+    </Window.Resources>
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
@@ -9,12 +12,38 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0">
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
-                <CheckBox Content="Lướt bảng tin (Newsfeed) trong khoảng" IsChecked="{Binding IsScrollFeed}" VerticalAlignment="Center" Width="220"/>
-                <TextBox Text="{Binding ScrollTimeMin}" Width="30" IsEnabled="{Binding IsScrollFeed}" Padding="2" HorizontalContentAlignment="Center"/>
-                <TextBlock Text=" - " VerticalAlignment="Center"/>
-                <TextBox Text="{Binding ScrollTimeMax}" Width="30" IsEnabled="{Binding IsScrollFeed}" Padding="2" HorizontalContentAlignment="Center"/>
-                <TextBlock Text=" giây" Margin="5,0,0,0" VerticalAlignment="Center"/>
+            <StackPanel Margin="0,0,0,15">
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Content="Lướt bảng tin (Newsfeed) trong khoảng" IsChecked="{Binding IsScrollFeed}" VerticalAlignment="Center" Width="220"/>
+                    <TextBox Text="{Binding ScrollTimeMin}" Width="30" IsEnabled="{Binding IsScrollFeed}" Padding="2" HorizontalContentAlignment="Center"/>
+                    <TextBlock Text=" - " VerticalAlignment="Center"/>
+                    <TextBox Text="{Binding ScrollTimeMax}" Width="30" IsEnabled="{Binding IsScrollFeed}" Padding="2" HorizontalContentAlignment="Center"/>
+                    <TextBlock Text=" giây" Margin="5,0,0,0" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Thêm các lựa chọn Like khi lướt -->
+                <StackPanel Margin="20,10,0,0" Visibility="{Binding IsScrollFeed, Converter={StaticResource BoolToVis}}">
+                    <CheckBox Content="Like bài khi lướt" IsChecked="{Binding IsLikePost}" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <StackPanel Margin="20,5,0,0" IsEnabled="{Binding IsLikePost}">
+                        <TextBlock Text="Chọn cảm xúc:" Margin="0,0,0,5" Foreground="#555"/>
+                        <WrapPanel Margin="0,0,0,10">
+                            <CheckBox Content="Thích (Like)" IsChecked="{Binding IsReactionLike}" Margin="0,0,10,5"/>
+                            <CheckBox Content="Yêu thích (Love)" IsChecked="{Binding IsReactionLove}" Margin="0,0,10,5"/>
+                            <CheckBox Content="Thương thương (Care)" IsChecked="{Binding IsReactionCare}" Margin="0,0,10,5"/>
+                            <CheckBox Content="Haha" IsChecked="{Binding IsReactionHaha}" Margin="0,0,10,5"/>
+                            <CheckBox Content="Wow" IsChecked="{Binding IsReactionWow}" Margin="0,0,10,5"/>
+                            <CheckBox Content="Buồn (Sad)" IsChecked="{Binding IsReactionSad}" Margin="0,0,10,5"/>
+                            <CheckBox Content="Phẫn nộ (Angry)" IsChecked="{Binding IsReactionAngry}" Margin="0,0,10,5"/>
+                        </WrapPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Random delay mỗi lần tương tác:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                            <TextBox Text="{Binding ReactionDelayMin}" Width="30" Padding="2" HorizontalContentAlignment="Center"/>
+                            <TextBlock Text=" - " VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding ReactionDelayMax}" Width="30" Padding="2" HorizontalContentAlignment="Center"/>
+                            <TextBlock Text=" s" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </StackPanel>
+                </StackPanel>
             </StackPanel>
 
             <StackPanel Orientation="Horizontal" Margin="0,0,0,10">

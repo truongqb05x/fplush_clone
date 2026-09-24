@@ -1,4 +1,5 @@
 using FPlusClone.Models;
+using FPlusClone.Views;
 using System.Windows.Input;
 using System.Linq;
 
@@ -10,7 +11,7 @@ namespace FPlusClone.ViewModels
         public string GroupUids
         {
             get => _groupUids;
-            set { if (_groupUids != value) { _groupUids = value; OnPropertyChanged(); } }
+            set { if (_groupUids != value) { _groupUids = value; SaveGroupUids(); OnPropertyChanged(); } }
         }
 
         private bool _isSequentialComment = true;
@@ -25,6 +26,26 @@ namespace FPlusClone.ViewModels
         {
             get => _isRandomComment;
             set { if (_isRandomComment != value) { _isRandomComment = value; OnPropertyChanged(); } }
+        }
+        private bool _isSettingsModalOpen;
+        public bool IsSettingsModalOpen
+        {
+            get => _isSettingsModalOpen;
+            set { if (_isSettingsModalOpen != value) { _isSettingsModalOpen = value; OnPropertyChanged(); } }
+        }
+
+        private int _maxThreads = 3;
+        public int MaxThreads
+        {
+            get => _maxThreads;
+            set { if (_maxThreads != value) { _maxThreads = value; OnPropertyChanged(); } }
+        }
+
+        private string _logText = "";
+        public string LogText
+        {
+            get => _logText;
+            set { if (_logText != value) { _logText = value; OnPropertyChanged(); } }
         }
 
         private bool _isTextComment = true;
@@ -96,15 +117,33 @@ namespace FPlusClone.ViewModels
             set { if (_isCheckApproval != value) { _isCheckApproval = value; OnPropertyChanged(); } }
         }
 
+        private bool _isResetDcom;
+        public bool IsResetDcom
+        {
+            get => _isResetDcom;
+            set { if (_isResetDcom != value) { _isResetDcom = value; OnPropertyChanged(); } }
+        }
+
+        private int _resetDcomAfter = 2;
+        public int ResetDcomAfter
+        {
+            get => _resetDcomAfter;
+            set { if (_resetDcomAfter != value) { _resetDcomAfter = value; OnPropertyChanged(); } }
+        }
+
         public ICommand StartTaskCommand { get; }
         public ICommand StopTaskCommand { get; }
         public ICommand SelectImageFolderCommand { get; }
+        public ICommand OpenSettingsCommand { get; }
+        public ICommand CloseSettingsCommand { get; }
 
         private readonly string commentsFilePath = "comments_spamgroup.txt";
+        private readonly string groupUidsFilePath = "group_uids_spamgroup.txt";
 
         public TabSpamGroupViewModel()
         {
             LoadComments();
+            LoadGroupUids();
 
             SelectImageFolderCommand = new RelayCommand(_ =>
             {
@@ -121,6 +160,8 @@ namespace FPlusClone.ViewModels
 
             StartTaskCommand = new RelayCommand(_ => StartTask());
             StopTaskCommand = new RelayCommand(_ => StopTask());
+            OpenSettingsCommand = new RelayCommand(_ => IsSettingsModalOpen = true);
+            CloseSettingsCommand = new RelayCommand(_ => IsSettingsModalOpen = false);
 
             AddCommentCommand = new RelayCommand(_ =>
             {
@@ -189,15 +230,223 @@ namespace FPlusClone.ViewModels
             System.IO.File.WriteAllLines(commentsFilePath, lines);
         }
 
+        private void LoadGroupUids()
+        {
+            if (System.IO.File.Exists(groupUidsFilePath))
+            {
+                _groupUids = System.IO.File.ReadAllText(groupUidsFilePath);
+                OnPropertyChanged(nameof(GroupUids));
+            }
+        }
+
+        private void SaveGroupUids()
+        {
+            if (_groupUids != null)
+            {
+                System.IO.File.WriteAllText(groupUidsFilePath, _groupUids);
+            }
+        }
+
+        private bool _isRunning;
+        public bool IsRunning
+        {
+            get => _isRunning;
+            set { if (_isRunning != value) { _isRunning = value; OnPropertyChanged(); } }
+        }
+
+        private string _statusText;
+        public string StatusText
+        {
+            get => _statusText;
+            set { if (_statusText != value) { _statusText = value; OnPropertyChanged(); } }
+        }
+
+        private System.Diagnostics.Process _runningProcess;
+
         private void StartTask()
         {
-            System.Windows.MessageBox.Show("Bắt đầu chạy tiến trình...");
-            // Logic calling Python will be implemented later
+            if (IsRunning) return;
+
+            var selectedUids = TaskAccounts.Select(t => t.Account.Uid).ToList();
+            if (selectedUids.Count == 0)
+            {
+                System.Windows.MessageBox.Show("Vui lòng chọn ít nhất 1 tài khoản để chạy.");
+                return;
+            }
+
+            var accountLines = TaskAccounts.Select(t => 
+                $"{t.Account.Uid}|{t.Account.Password}|{t.Account.TwoFA}|{t.Account.Cookie}|{t.Account.Token}"
+            ).ToList();
+
+            // Đọc cài đặt proxy từ settings.json
+            var appSettings = SettingsViewModel.Load();
+            var proxyLines = new System.Collections.Generic.List<string>();
+            if (appSettings.ProxyList != null)
+            {
+                proxyLines = appSettings.ProxyList
+                    .Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries)
+                    .Where(l => !string.IsNullOrWhiteSpace(l))
+                    .ToList();
+            }
+
+            var fullConfig = new
+            {
+                MaxThreads = MaxThreads, // <-- Thêm số luồng
+                GroupUids = GroupUids?.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries).ToList() ?? new System.Collections.Generic.List<string>(),
+                IsTextComment = IsTextComment,
+                IsImageComment = IsImageComment,
+                ImageFolderPath = ImageFolderPath,
+                IsSequentialComment = IsSequentialComment,
+                IsRandomComment = IsRandomComment,
+                CommentsList = CommentsList.Select(c => c.Content).ToList(),
+                SelectedAccounts = selectedUids,
+                SelectedAccountsInfo = accountLines, // <-- Truyền trực tiếp qua json
+                
+                // Base Tab config
+                IsRepeat = IsRepeat,
+                RepeatCount = RepeatCount,
+                ActionBeforePost = ActionBeforePost,
+                ConfigBeforePost = ConfigBeforePost,
+                ActionAfterPost = ActionAfterPost,
+                ConfigAfterPost = ConfigAfterPost,
+
+                // Proxy từ cài đặt hệ thống (Settings Modal)
+                ProxyMethod = appSettings.ProxyMethod,
+                ProxyList = proxyLines,
+                KiotProxyKey = appSettings.KiotProxyKey ?? "",
+
+                // Reset DCOM (chỉ áp dụng khi KiotProxy)
+                IsResetDcom = IsResetDcom,
+                ResetDcomAfter = ResetDcomAfter
+            };
+            
+            string jsonConfig = System.Text.Json.JsonSerializer.Serialize(fullConfig);
+            System.IO.File.WriteAllText("spam_group_config.json", jsonConfig);
+
+            IsRunning = true;
+            StatusText = "Đang chạy";
+            LogText = ""; // Clear log when starting
+            
+            try
+            {
+                _runningProcess = new System.Diagnostics.Process();
+                
+                // Tìm thư mục gốc chứa thư mục Logic
+                string baseDir = System.AppDomain.CurrentDomain.BaseDirectory;
+                string mainPyPath = System.IO.Path.Combine(baseDir, "Logic", "main.py");
+                if (!System.IO.File.Exists(mainPyPath) && baseDir.Contains("bin"))
+                {
+                    // Lùi lại 3 cấp nếu đang chạy trong bin\Debug\netX.X (về thư mục main)
+                    baseDir = System.IO.Path.GetFullPath(System.IO.Path.Combine(baseDir, "..", "..", ".."));
+                }
+
+                // Ghi file json vào thư mục chạy python để python chắc chắn đọc được
+                string configPath = System.IO.Path.Combine(baseDir, "spam_group_config.json");
+                System.IO.File.WriteAllText(configPath, jsonConfig);
+
+                _runningProcess.StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "python",
+                    Arguments = $"-u Logic\\main.py 1 spam_group_config.json",
+                    WorkingDirectory = baseDir,
+                    UseShellExecute = false,
+                    CreateNoWindow = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true
+                };
+                
+                _runningProcess.EnableRaisingEvents = true;
+                
+                string errorOutput = "";
+                _runningProcess.OutputDataReceived += (s, e) => 
+                {
+                    if (e.Data != null)
+                    {
+                        System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                        {
+                            LogText += e.Data + "\n";
+                        });
+                    }
+                };
+                _runningProcess.ErrorDataReceived += (s, e) => 
+                { 
+                    if (e.Data != null) 
+                    {
+                        errorOutput += e.Data + "\n";
+                        System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                        {
+                            LogText += "[ERROR] " + e.Data + "\n";
+                        });
+                    }
+                };
+                
+                _runningProcess.Exited += (s, e) => 
+                {
+                    System.Windows.Application.Current.Dispatcher.Invoke(() => 
+                    {
+                        IsRunning = false;
+                        
+                        // Nếu tiến trình tự kết thúc thành công (ExitCode == 0)
+                        if (_runningProcess != null && _runningProcess.HasExited && _runningProcess.ExitCode == 0)
+                        {
+                            StatusText = "Đã kết thúc";
+                        }
+                        else
+                        {
+                            StatusText = "Đã dừng";
+                        }
+                        
+                        if (!string.IsNullOrWhiteSpace(errorOutput))
+                        {
+                            System.Windows.MessageBox.Show("Python Error:\n" + errorOutput);
+                        }
+                    });
+                };
+                
+                _runningProcess.Start();
+                _runningProcess.BeginOutputReadLine();
+                _runningProcess.BeginErrorReadLine();
+            }
+            catch (System.Exception ex)
+            {
+                IsRunning = false;
+                StatusText = "Lỗi";
+                System.Windows.MessageBox.Show("Lỗi khởi tạo python: " + ex.Message);
+            }
         }
 
         private void StopTask()
         {
-            System.Windows.MessageBox.Show("Đã yêu cầu dừng tiến trình.");
+            if (_runningProcess != null && !_runningProcess.HasExited)
+            {
+                try
+                {
+                    _runningProcess.Kill();
+                }
+                catch { }
+            }
+
+            try
+            {
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "taskkill",
+                    Arguments = "/F /IM chrome.exe /T",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                });
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "taskkill",
+                    Arguments = "/F /IM chromedriver.exe /T",
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                });
+            }
+            catch { }
+
+            IsRunning = false;
+            StatusText = "Đã dừng";
         }
     }
 }

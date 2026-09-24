@@ -4,7 +4,7 @@ import random
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 
-def random_like_post(driver, uid):
+def random_like_post(driver, uid, allowed_reactions=None):
     """
     Tìm nút Like bài viết trên màn hình, di chuột vào để hiện popup cảm xúc,
     và chọn ngẫu nhiên một cảm xúc (Like, Love, Haha, Wow...).
@@ -29,8 +29,11 @@ def random_like_post(driver, uid):
             time.sleep(2)  # Đợi popup hiện lên
             
             # Các nhãn cảm xúc phổ biến (Việt / Anh)
-            labels = ["Yêu thích", "Haha", "Wow", "Buồn", "Thương thương", "Phẫn nộ", 
-                      "Love", "Care", "Sad", "Angry", "Haha", "Wow"]
+            if not allowed_reactions:
+                labels = ["Thích", "Like", "Yêu thích", "Haha", "Wow", "Buồn", "Thương thương", "Phẫn nộ", 
+                          "Love", "Care", "Sad", "Angry"]
+            else:
+                labels = allowed_reactions
             
             xpath_expr = " | ".join([f'//div[@role="button" and @aria-label="{lbl}"]' for lbl in labels])
             reactions = driver.find_elements(By.XPATH, xpath_expr)

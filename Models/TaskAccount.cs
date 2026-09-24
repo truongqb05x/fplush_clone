@@ -33,6 +33,13 @@ namespace FPlusClone.Models
             set { if (_progress != value) { _progress = value; OnPropertyChanged(); } }
         }
 
+        private string _proxy = "Direct";
+        public string Proxy
+        {
+            get => _proxy;
+            set { if (_proxy != value) { _proxy = value; OnPropertyChanged(); } }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
         protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {

@@ -5,12 +5,29 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from actions.like_actions import random_like_post
 
-def warm_up_account(driver, uid, warmup_time=None):
+def warm_up_account(driver, uid, warmup_time=None, cfg=None):
     print(f"[{uid}] 🍵 Đang nuôi tài khoản (Warm-up)...")
     if warmup_time is None:
         warmup_time = random.randint(120, 240) # 2-4 phút
     start_time = time.time()
     
+    # Parse cfg
+    is_like_post = False
+    allowed_reactions = []
+    reaction_delay_min = 5
+    reaction_delay_max = 15
+    if cfg:
+        is_like_post = cfg.get("IsLikePost", False)
+        if cfg.get("IsReactionLike"): allowed_reactions.extend(["Thích", "Like"])
+        if cfg.get("IsReactionLove"): allowed_reactions.extend(["Yêu thích", "Love"])
+        if cfg.get("IsReactionCare"): allowed_reactions.extend(["Thương thương", "Care"])
+        if cfg.get("IsReactionHaha"): allowed_reactions.extend(["Haha"])
+        if cfg.get("IsReactionWow"): allowed_reactions.extend(["Wow"])
+        if cfg.get("IsReactionSad"): allowed_reactions.extend(["Buồn", "Sad"])
+        if cfg.get("IsReactionAngry"): allowed_reactions.extend(["Phẫn nộ", "Angry"])
+        reaction_delay_min = cfg.get("ReactionDelayMin", 5)
+        reaction_delay_max = cfg.get("ReactionDelayMax", 15)
+
     # Ưu tiên News Feed để có nhiều link tương tác
     url = "https://www.facebook.com/"
     driver.get(url)
@@ -80,9 +97,18 @@ def warm_up_account(driver, uid, warmup_time=None):
                 # Bỏ qua lỗi nhỏ khi tìm link/click để không làm crash luồng nuôi
                 pass
         
-        # Ngẫu nhiên thả cảm xúc (Giảm xuống còn khoảng 5% cơ hội mỗi lần cuộn để tránh spam Like)
-        if random.random() < 0.05:
-            random_like_post(driver, uid)
+        # Logic like bài viết
+        if is_like_post:
+            # Ngẫu nhiên thả cảm xúc theo cấu hình (tỷ lệ 15% mỗi lần cuộn)
+            if random.random() < 0.15:
+                delay = random.uniform(reaction_delay_min, reaction_delay_max)
+                print(f"[{uid}] ⏳ Đợi {int(delay)}s trước khi thả cảm xúc (cấu hình like)...")
+                time.sleep(delay)
+                random_like_post(driver, uid, allowed_reactions=allowed_reactions)
+        else:
+            # Ngẫu nhiên thả cảm xúc mặc định (Giảm xuống còn khoảng 5% cơ hội mỗi lần cuộn để tránh spam Like)
+            if random.random() < 0.05:
+                random_like_post(driver, uid)
             
         # Thi thoảng (tỷ lệ 8%) đi kiểm tra thông báo
         if random.random() < 0.08:

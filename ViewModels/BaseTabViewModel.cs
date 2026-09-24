@@ -1,4 +1,5 @@
 using FPlusClone.Models;
+using FPlusClone.Views;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
@@ -85,12 +86,31 @@ namespace FPlusClone.ViewModels
 
             if (window.ShowDialog() == true)
             {
+                var appSettings = SettingsViewModel.Load();
+                var proxyLines = (appSettings.ProxyList ?? "")
+                    .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+                    .Where(l => !string.IsNullOrWhiteSpace(l))
+                    .ToList();
+
+                var existingCount = TaskAccounts.Count;
                 foreach (var acc in window.SelectedAccountsResult)
                 {
-                    // Check if already exists
                     if (!TaskAccounts.Any(a => a.Account.Uid == acc.Uid))
                     {
-                        TaskAccounts.Add(new TaskAccount { Account = acc });
+                        string proxyLabel = "Direct";
+                        if (appSettings.ProxyMethod == 1 && proxyLines.Count > 0)
+                        {
+                            int idx = existingCount % proxyLines.Count;
+                            proxyLabel = proxyLines[idx];
+                        }
+                        else if (appSettings.ProxyMethod == 2)
+                        {
+                            proxyLabel = string.IsNullOrEmpty(appSettings.KiotProxyKey)
+                                ? "KiotProxy (no key)"
+                                : $"KiotProxy ({appSettings.KiotProxyKey.Substring(0, Math.Min(8, appSettings.KiotProxyKey.Length))}...)";    
+                        }
+                        TaskAccounts.Add(new TaskAccount { Account = acc, Proxy = proxyLabel });
+                        existingCount++;
                     }
                 }
             }

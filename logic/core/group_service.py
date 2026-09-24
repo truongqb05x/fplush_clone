@@ -105,7 +105,7 @@ def check_comment_status_after_post(driver, uid):
     return "OK"
 
 
-def process_group_cycle(driver, uid, group_id, is_edit_comment="yes"):
+def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_config=None, comment_index=0):
     if is_logged_out(driver):
         print(f"[{uid}] ⚠️ Phát hiện tài khoản đã bị đăng xuất!")
         return "LOGGED_OUT"
@@ -196,14 +196,20 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes"):
                     target_content_file = "resources/special_stt.txt"
                     print(f"[{uid}] 🌟 PHÁT HIỆN GROUP ĐẶC BIỆT! Sử dụng file: {target_content_file}")
             
-            image_groups_file = "resources/image_groups.txt"
             is_image_comment = False
-            if os.path.exists(image_groups_file):
-                with open(image_groups_file, "r", encoding="utf-8-sig") as f:
-                    image_groups = [line.strip() for line in f if line.strip() and not line.startswith("#")]
-                is_image_comment = any(item in group_id or item in target_url for item in image_groups)
-                if is_image_comment:
-                    print(f"[{uid}] 🖼️ PHÁT HIỆN GROUP ẢNH! Sử dụng chế độ comment bằng ảnh.")
+            images_dir = "resources/images"
+            if task_config:
+                if task_config.get("IsImageComment"):
+                    is_image_comment = True
+                    images_dir = task_config.get("ImageFolderPath", "resources/images")
+            else:
+                image_groups_file = "resources/image_groups.txt"
+                if os.path.exists(image_groups_file):
+                    with open(image_groups_file, "r", encoding="utf-8-sig") as f:
+                        image_groups = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+                    is_image_comment = any(item in group_id or item in target_url for item in image_groups)
+                    if is_image_comment:
+                        print(f"[{uid}] 🖼️ PHÁT HIỆN GROUP ẢNH! Sử dụng chế độ comment bằng ảnh.")
 
             for attempt in range(2):
                 if attempt > 0:
@@ -288,15 +294,26 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes"):
                                 print(f"[{uid}] 🔧 [DEBUG] Lỗi khi cuộn ô comment, bỏ qua.")
                                 pass
                             
-                            if is_edit_comment == "no":
-                                content = "Check inbox nhé"
-                                if os.path.exists(target_content_file):
-                                    with open(target_content_file, "r", encoding="utf-8-sig") as f:
-                                        content = f.read().strip()
+                            if task_config:
+                                comment_list = task_config.get("CommentsList", [])
+                                if comment_list:
+                                    if task_config.get("IsSequentialComment"):
+                                        idx = comment_index % len(comment_list)
+                                        content = comment_list[idx]
+                                    else:
+                                        content = random.choice(comment_list)
+                                else:
+                                    content = "Check inbox nhé"
                             else:
-                                with FILE_LOCK:
-                                    stt_lines = read_file("resources/stt.txt")
-                                content = random.choice(stt_lines) if stt_lines else "Up bài giúp b nhé"
+                                if is_edit_comment == "no":
+                                    content = "Check inbox nhé"
+                                    if os.path.exists(target_content_file):
+                                        with open(target_content_file, "r", encoding="utf-8-sig") as f:
+                                            content = f.read().strip()
+                                else:
+                                    with FILE_LOCK:
+                                        stt_lines = read_file("resources/stt.txt")
+                                    content = random.choice(stt_lines) if stt_lines else "Up bài giúp b nhé"
                             
                             print(f"[{uid}] ✍️ Đang xử lý comment...")
                             time.sleep(random.uniform(2, 5))
@@ -324,7 +341,7 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes"):
                                 print(f"[{uid}] 🔧 [DEBUG] Đang click/focus ô comment để gọi UI nút Submit...")
                                 driver.execute_script("arguments[0].click(); arguments[0].focus();", comment_input)
                                 time.sleep(2)
-                                images_dir = "resources/images"
+                                # images_dir đã được lấy từ task_config ở trên
                                 image_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
                                 available_images = []
                                 if os.path.exists(images_dir):
@@ -613,8 +630,7 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes"):
                 # Bỏ qua hoàn toàn việc click, vì Selenium có thể tương tác trực tiếp với input type=file
                 pass
 
-                # Chọn ảnh ngẫu nhiên từ thư mục resources/images/
-                images_dir = "resources/images"
+                # images_dir đã được lấy ở trên
                 image_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
                 available_images = []
                 if os.path.exists(images_dir):

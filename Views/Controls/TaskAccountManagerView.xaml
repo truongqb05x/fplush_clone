@@ -12,20 +12,34 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <Button Content="Chọn Tài Khoản" Command="{Binding OpenSelectAccountCommand}" 
-                    Background="#1a73e8" Foreground="White" FontWeight="Bold" Padding="10" Cursor="Hand" BorderThickness="0"/>
-        </StackPanel>
-
         <DataGrid Grid.Row="1" ItemsSource="{Binding TaskAccounts}" AutoGenerateColumns="False" 
                   CanUserAddRows="False" Background="White" BorderBrush="#dadce0" BorderThickness="1" 
                   RowBackground="White" AlternatingRowBackground="#f8f9fa" HeadersVisibility="Column" 
-                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#eee">
+                  GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#eee" Margin="0,0,0,10">
+
+            <!-- Right-click context menu for each row -->
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <Setter Property="Tag" Value="{Binding DataContext, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                    <Setter Property="ContextMenu">
+                        <Setter.Value>
+                            <ContextMenu>
+                                <MenuItem Header="🗑 Xóa tài khoản này"
+                                          Command="{Binding PlacementTarget.Tag.RemoveAccountCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                          CommandParameter="{Binding}"/>
+                            </ContextMenu>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </DataGrid.RowStyle>
+
             <DataGrid.Columns>
+                <!-- Checkbox column -->
                 <DataGridTemplateColumn Width="30">
                     <DataGridTemplateColumn.HeaderTemplate>
                         <DataTemplate>
-                            <CheckBox Command="{Binding DataContext.SelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"/>
+                            <CheckBox Command="{Binding DataContext.SelectAllCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}"
+                                      ToolTip="Chọn/bỏ tất cả"/>
                         </DataTemplate>
                     </DataGridTemplateColumn.HeaderTemplate>
                     <DataGridTemplateColumn.CellTemplate>
@@ -36,24 +50,51 @@
                 </DataGridTemplateColumn>
 
                 <DataGridTextColumn Header="UID" Binding="{Binding Account.Uid}" Width="*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Trạng thái" Binding="{Binding Status}" Width="1.5*" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Tiến độ" Binding="{Binding Progress}" Width="0.8*" IsReadOnly="True"/>
-
-                <DataGridTemplateColumn Header="Thao tác" Width="70">
-                    <DataGridTemplateColumn.CellTemplate>
-                        <DataTemplate>
-                            <Button Content="Xóa" Command="{Binding DataContext.RemoveAccountCommand, RelativeSource={RelativeSource AncestorType=DataGrid}}" 
-                                    CommandParameter="{Binding}" Background="#dc3545" Foreground="White" BorderThickness="0" Padding="5,2" Cursor="Hand"/>
-                        </DataTemplate>
-                    </DataGridTemplateColumn.CellTemplate>
-                </DataGridTemplateColumn>
+                <DataGridTextColumn Header="Trạng thái" Binding="{Binding Status}" Width="1.2*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Tiến độ" Binding="{Binding Progress}" Width="0.7*" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="HorizontalAlignment" Value="Center"/>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
+                <DataGridTextColumn Header="Proxy" Binding="{Binding Proxy}" Width="1.5*" IsReadOnly="True">
+                    <DataGridTextColumn.ElementStyle>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="#1a73e8"/>
+                            <Setter Property="FontSize" Value="11"/>
+                            <Setter Property="TextTrimming" Value="CharacterEllipsis"/>
+                            <Style.Triggers>
+                                <Trigger Property="Text" Value="Direct">
+                                    <Setter Property="Foreground" Value="#888"/>
+                                </Trigger>
+                            </Style.Triggers>
+                        </Style>
+                    </DataGridTextColumn.ElementStyle>
+                </DataGridTextColumn>
             </DataGrid.Columns>
         </DataGrid>
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,10,0,0">
-            <Button Content="Xóa dòng chọn" Command="{Binding RemoveAccountCommand}" Background="#dc3545" Foreground="White" Padding="10,5" BorderThickness="0" Cursor="Hand"/>
-            <TextBlock Text="Đã chọn: " Margin="15,0,0,0" VerticalAlignment="Center" Foreground="#555"/>
-            <TextBlock Text="{Binding TaskAccounts.Count}" FontWeight="Bold" Foreground="#1a73e8" VerticalAlignment="Center"/>
-        </StackPanel>
+        <Grid Grid.Row="2" Margin="0,0,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock FontSize="11" Foreground="#888" VerticalAlignment="Center">
+                <Run Text="Tổng: "/>
+                <Run Text="{Binding TaskAccounts.Count, Mode=OneWay}" FontWeight="Bold" Foreground="#1a73e8"/>
+                <Run Text=" tài khoản | Chuột phải để xóa"/>
+            </TextBlock>
+            <Button Grid.Column="1" Content="Chọn Tài Khoản" Command="{Binding OpenSelectAccountCommand}" 
+                    Background="#1a73e8" Foreground="White" FontWeight="Bold" FontSize="11" Padding="12,5" Cursor="Hand" BorderThickness="0">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                        </Border>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </Grid>
     </Grid>
 </UserControl>

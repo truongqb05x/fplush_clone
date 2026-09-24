@@ -22,7 +22,17 @@ namespace FPlusClone.Views
                 IsAddFriends = config.IsAddFriends,
                 AddFriendsCount = config.AddFriendsCount,
                 IsRandomAction = config.IsRandomAction,
-                IsChatWithEachOther = config.IsChatWithEachOther
+                IsChatWithEachOther = config.IsChatWithEachOther,
+                IsLikePost = config.IsLikePost,
+                IsReactionLike = config.IsReactionLike,
+                IsReactionLove = config.IsReactionLove,
+                IsReactionCare = config.IsReactionCare,
+                IsReactionHaha = config.IsReactionHaha,
+                IsReactionWow = config.IsReactionWow,
+                IsReactionSad = config.IsReactionSad,
+                IsReactionAngry = config.IsReactionAngry,
+                ReactionDelayMin = config.ReactionDelayMin,
+                ReactionDelayMax = config.ReactionDelayMax
             };
 
             DataContext = Config;
@@ -30,6 +40,20 @@ namespace FPlusClone.Views
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
+            if (Config.IsLikePost)
+            {
+                if (Config.ReactionDelayMax > Config.ScrollTimeMax)
+                {
+                    MessageBox.Show("Thời gian delay của react không được lớn hơn thời gian lướt bài (ScrollTimeMax)!", "Lỗi hợp logic", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+                if (Config.ReactionDelayMin > Config.ReactionDelayMax)
+                {
+                    MessageBox.Show("Thời gian delay min không được lớn hơn delay max!", "Lỗi", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    return;
+                }
+            }
+
             DialogResult = true;
             Close();
         }

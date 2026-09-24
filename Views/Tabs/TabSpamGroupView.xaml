@@ -43,13 +43,32 @@
                 <StackPanel Grid.Row="1" Margin="0,0,0,15">
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,5">
-                        <CheckBox Content="Hành động trước khi đăng bài" IsChecked="{Binding ActionBeforePost}" VerticalAlignment="Center" Width="200"/>
+                        <CheckBox Content="Hành động trước bình luận" IsChecked="{Binding ActionBeforePost}" VerticalAlignment="Center" Width="200"/>
                         <Button Content="⚙ Cài đặt" Command="{Binding OpenActionConfigCommand}" CommandParameter="Before" Padding="5,2" Background="#f8f9fa" BorderBrush="#ccc" Cursor="Hand"/>
                     </StackPanel>
-                    <StackPanel Orientation="Horizontal">
-                        <CheckBox Content="Hành động sau khi đăng bài" IsChecked="{Binding ActionAfterPost}" VerticalAlignment="Center" Width="200"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                        <CheckBox Content="Hành động sau bình luận" IsChecked="{Binding ActionAfterPost}" VerticalAlignment="Center" Width="200"/>
                         <Button Content="⚙ Cài đặt" Command="{Binding OpenActionConfigCommand}" CommandParameter="After" Padding="5,2" Background="#f8f9fa" BorderBrush="#ccc" Cursor="Hand"/>
                     </StackPanel>
+                    
+                    <!-- Nút mở Cài đặt nâng cao -->
+                    <Button Command="{Binding OpenSettingsCommand}" HorizontalAlignment="Left" Background="#f8f9fa" BorderBrush="#ccc" Foreground="#333" FontWeight="SemiBold" FontSize="13" Padding="15,6" Margin="0,0,0,0" Cursor="Hand" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚙ Cài đặt nâng cao" VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" Margin="{TemplateBinding Padding}"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#e2e6ea"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
                 </StackPanel>
 
                 <!-- Cấu hình cũ -->
@@ -135,99 +154,333 @@
                         </Border>
                     </StackPanel>
 
-                    <StackPanel Grid.Column="2">
+                    <Grid Grid.Column="2">
                         <Border Background="#f8f9fa" BorderBrush="#dadce0" BorderThickness="1" Padding="15">
-                            <StackPanel>
-                                <Grid Margin="0,0,0,15">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="*"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+                                
+                                <Grid Grid.Row="0" Margin="0,0,0,15">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="80"/>
+                                        <ColumnDefinition Width="10"/>
+                                        <ColumnDefinition Width="*"/>
                                     </Grid.ColumnDefinitions>
-                                    <StackPanel>
-                                        <TextBlock Text="Số comment / tài khoản" FontSize="12" FontWeight="SemiBold"/>
-                                        <TextBlock Text="Giới hạn tối đa" FontSize="11" Foreground="#888"/>
-                                    </StackPanel>
-                                    <Border Grid.Column="1" BorderBrush="#dadce0" BorderThickness="1" Background="White">
-                                        <TextBox Text="{Binding MaxComments}" BorderThickness="0" Padding="5" HorizontalContentAlignment="Center"/>
-                                    </Border>
-                                </Grid>
+                                    
+                                    <!-- Nút Bắt đầu -->
+                                    <Button Grid.Column="0" Command="{Binding StartTaskCommand}" Background="#109c64" Foreground="White" Cursor="Hand" BorderThickness="0" Height="36">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="6">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <Polygon Points="0,0 10,5 0,10" Fill="White" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Bắt đầu" FontWeight="Bold" FontSize="14" VerticalAlignment="Center"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#0d8555"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsEnabled" Value="False">
+                                                        <Setter Property="Background" Value="#a0d8c0"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
 
-                                <Grid Margin="0,0,0,15">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel>
-                                        <TextBlock Text="Nghỉ giữa comment (giây)" FontSize="12" FontWeight="SemiBold"/>
-                                        <TextBlock Text="Khoảng thời gian random" FontSize="11" Foreground="#888"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                        <Border BorderBrush="#dadce0" BorderThickness="1" Background="White" Width="40">
-                                            <TextBox Text="{Binding DelayMin}" BorderThickness="0" Padding="5" HorizontalContentAlignment="Center"/>
-                                        </Border>
-                                        <TextBlock Text="-" VerticalAlignment="Center" Margin="5,0"/>
-                                        <Border BorderBrush="#dadce0" BorderThickness="1" Background="White" Width="40">
-                                            <TextBox Text="{Binding DelayMax}" BorderThickness="0" Padding="5" HorizontalContentAlignment="Center"/>
-                                        </Border>
-                                    </StackPanel>
-                                </Grid>
-
-                                <Grid Margin="0,0,0,15">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel>
-                                        <TextBlock Text="Lặp lại tiến trình" FontSize="12" FontWeight="SemiBold"/>
-                                        <TextBlock Text="Số vòng lặp" FontSize="11" Foreground="#888"/>
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                        <CheckBox IsChecked="{Binding IsRepeat}" VerticalAlignment="Center" Margin="0,0,5,0"/>
-                                        <Border BorderBrush="#dadce0" BorderThickness="1" Background="White" Width="50">
-                                            <TextBox Text="{Binding RepeatCount}" IsEnabled="{Binding IsRepeat}" BorderThickness="0" Padding="5" HorizontalContentAlignment="Center"/>
-                                        </Border>
-                                    </StackPanel>
-                                </Grid>
-
-                                <Grid Margin="0,0,0,25">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel>
-                                        <TextBlock Text="Sửa comment sau đăng" FontSize="12" FontWeight="SemiBold"/>
-                                        <TextBlock Text="Chỉnh sửa nội dung để lách spam" FontSize="11" Foreground="#888"/>
-                                    </StackPanel>
-                                    <CheckBox Grid.Column="1" IsChecked="{Binding EditAfterPost}" VerticalAlignment="Center">
-                                        <CheckBox.LayoutTransform>
-                                            <ScaleTransform ScaleX="1.2" ScaleY="1.2"/>
-                                        </CheckBox.LayoutTransform>
-                                    </CheckBox>
-                                </Grid>
-
-                                <Grid Margin="0,0,0,25">
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <StackPanel>
-                                        <TextBlock Text="Check phê duyệt" FontSize="12" FontWeight="SemiBold"/>
-                                        <TextBlock Text="Kiểm tra trạng thái bình luận" FontSize="11" Foreground="#888"/>
-                                    </StackPanel>
-                                    <CheckBox Grid.Column="1" IsChecked="{Binding IsCheckApproval}" VerticalAlignment="Center">
-                                        <CheckBox.LayoutTransform>
-                                            <ScaleTransform ScaleX="1.2" ScaleY="1.2"/>
-                                        </CheckBox.LayoutTransform>
-                                    </CheckBox>
+                                    <!-- Nút Dừng -->
+                                    <Button Grid.Column="2" Command="{Binding StopTaskCommand}" Background="White" BorderBrush="#c82333" Foreground="#c82333" Cursor="Hand" BorderThickness="1" Height="36">
+                                        <Button.Template>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="6">
+                                                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                        <Rectangle Width="8" Height="8" Fill="#c82333" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                                                        <TextBlock Text="Dừng" FontWeight="Bold" FontSize="14" VerticalAlignment="Center" Foreground="{TemplateBinding Foreground}"/>
+                                                    </StackPanel>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#fff5f5"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Button.Template>
+                                    </Button>
                                 </Grid>
                                 
-                                <Button Content="BẮT ĐẦU" Command="{Binding StartTaskCommand}" Background="#1a73e8" Foreground="White" FontWeight="Bold" FontSize="14" Padding="0,10" Margin="0,0,0,10" Cursor="Hand" BorderThickness="0"/>
-                                <Button Content="DỪNG LẠI" Command="{Binding StopTaskCommand}" Background="#dc3545" Foreground="White" FontWeight="Bold" FontSize="14" Padding="0,10" Cursor="Hand" BorderThickness="0"/>
-                            </StackPanel>
+                                <!-- Khung hiển thị log -->
+                                <Border Grid.Row="1" BorderBrush="#dadce0" BorderThickness="1" Background="White" CornerRadius="4" Margin="0,0,0,15">
+                                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                        <TextBox Text="{Binding LogText}" IsReadOnly="True" BorderThickness="0" Padding="8" Background="Transparent" Foreground="#444" FontSize="11" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+                                    </ScrollViewer>
+                                </Border>
+
+                                <!-- Trạng thái chạy -->
+                                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,5,0,0">
+                                    <!-- Đang chạy icon (spinner) -->
+                                    <Grid Width="22" Height="22" Margin="0,0,8,0" Visibility="{Binding IsRunning, Converter={StaticResource BoolToVis}}">
+                                        <Ellipse Stroke="#e0e0e0" StrokeThickness="2" Width="18" Height="18"/>
+                                        <Path Data="M 11,2 A 9,9 0 0 1 20,11" Stroke="#1a73e8" StrokeThickness="2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
+                                            <Path.RenderTransform>
+                                                <RotateTransform Angle="0"/>
+                                            </Path.RenderTransform>
+                                            <Path.Triggers>
+                                                <EventTrigger RoutedEvent="Loaded">
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="(Path.RenderTransform).(RotateTransform.Angle)" From="0" To="360" Duration="0:0:1" RepeatBehavior="Forever"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </EventTrigger>
+                                            </Path.Triggers>
+                                        </Path>
+                                    </Grid>
+                                    
+                                    <!-- Đã dừng icon (grey circle with minus) -->
+                                    <Border Width="22" Height="22" CornerRadius="11" Background="#f4f5f7" BorderBrush="#e0e0e0" BorderThickness="1.5" Margin="0,0,8,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StatusText}" Value="Đã dừng">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Rectangle Width="8" Height="1.5" Fill="#666" RadiusX="0.5" RadiusY="0.5"/>
+                                    </Border>
+                                    
+                                    <!-- Đã kết thúc icon (grey circle with dot) -->
+                                    <Border Width="22" Height="22" CornerRadius="11" Background="#f4f5f7" BorderBrush="#e0e0e0" BorderThickness="1.5" Margin="0,0,8,0">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Visibility" Value="Collapsed"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StatusText}" Value="Đã kết thúc">
+                                                        <Setter Property="Visibility" Value="Visible"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <Ellipse Width="6" Height="6" Fill="#17509c"/>
+                                    </Border>
+
+                                    <!-- Pill text -->
+                                    <Border CornerRadius="15" Padding="15,6">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="#f4f5f7"/>
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding StatusText}" Value="Đang chạy">
+                                                        <Setter Property="Background" Value="#eef2fa"/>
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <TextBlock Text="{Binding StatusText}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Foreground" Value="#666"/>
+                                                    <Setter Property="FontSize" Value="13"/>
+                                                    <Setter Property="FontWeight" Value="SemiBold"/>
+                                                    <Setter Property="VerticalAlignment" Value="Center"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding StatusText}" Value="Đang chạy">
+                                                            <Setter Property="Foreground" Value="#1a73e8"/>
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding StatusText}" Value="Đã kết thúc">
+                                                            <Setter Property="Foreground" Value="#17509c"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
                         </Border>
-                    </StackPanel>
+                    </Grid>
                 </Grid>
             </Grid>
         </Border>
+        <!-- MODAL SETTINGS OVERLAY -->
+        <Grid Background="#66000000" Visibility="{Binding IsSettingsModalOpen, Converter={StaticResource BoolToVis}}" Grid.ColumnSpan="3">
+            <Border Background="White" CornerRadius="8" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="25" Width="400" MaxHeight="600">
+                <Border.Effect>
+                    <DropShadowEffect Color="Black" BlurRadius="15" Opacity="0.2" Direction="270" ShadowDepth="4"/>
+                </Border.Effect>
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+                    
+                    <TextBlock Text="Cài đặt nâng cao" FontSize="18" FontWeight="Bold" Foreground="#333" Margin="0,0,0,20"/>
+                    
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,0,0,20">
+                        <StackPanel>
+                            <!-- Các cài đặt đã được dời vào đây -->
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="80"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Số comment / tài khoản" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Giới hạn tối đa" FontSize="11" Foreground="#888"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" BorderBrush="#dadce0" BorderThickness="1" Background="White">
+                                    <TextBox Text="{Binding MaxComments}" BorderThickness="0" Padding="5" HorizontalContentAlignment="Center"/>
+                                </Border>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Nghỉ giữa comment (giây)" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Khoảng thời gian random" FontSize="11" Foreground="#888"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <Border BorderBrush="#dadce0" BorderThickness="1" Background="White" Width="40">
+                                        <TextBox Text="{Binding DelayMin}" BorderThickness="0" Padding="5" HorizontalContentAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Text="-" VerticalAlignment="Center" Margin="5,0"/>
+                                    <Border BorderBrush="#dadce0" BorderThickness="1" Background="White" Width="40">
+                                        <TextBox Text="{Binding DelayMax}" BorderThickness="0" Padding="5" HorizontalContentAlignment="Center"/>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Lặp lại tiến trình" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Số vòng lặp" FontSize="11" Foreground="#888"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <CheckBox IsChecked="{Binding IsRepeat}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <Border BorderBrush="#dadce0" BorderThickness="1" Background="White" Width="50">
+                                        <TextBox Text="{Binding RepeatCount}" IsEnabled="{Binding IsRepeat}" BorderThickness="0" Padding="5" HorizontalContentAlignment="Center"/>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,25">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Sửa comment sau đăng" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Chỉnh sửa nội dung để lách spam" FontSize="11" Foreground="#888"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" IsChecked="{Binding EditAfterPost}" VerticalAlignment="Center">
+                                    <CheckBox.LayoutTransform>
+                                        <ScaleTransform ScaleX="1.2" ScaleY="1.2"/>
+                                    </CheckBox.LayoutTransform>
+                                </CheckBox>
+                            </Grid>
+
+                            <Grid Margin="0,0,0,25">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Check phê duyệt" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Kiểm tra trạng thái bình luận" FontSize="11" Foreground="#888"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" IsChecked="{Binding IsCheckApproval}" VerticalAlignment="Center">
+                                    <CheckBox.LayoutTransform>
+                                        <ScaleTransform ScaleX="1.2" ScaleY="1.2"/>
+                                    </CheckBox.LayoutTransform>
+                                </CheckBox>
+                            </Grid>
+                            
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Số luồng chạy đồng thời" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Mở bao nhiêu tab cùng lúc" FontSize="11" Foreground="#888"/>
+                                </StackPanel>
+                                <Border Grid.Column="1" BorderBrush="#dadce0" BorderThickness="1" Background="White" Width="50" VerticalAlignment="Center">
+                                    <TextBox Text="{Binding MaxThreads}" BorderThickness="0" Padding="5" HorizontalContentAlignment="Center"/>
+                                </Border>
+                            </Grid>
+                            
+                            <Grid Margin="0,0,0,15">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel>
+                                    <TextBlock Text="Reset DCOM lấy IP mới" FontSize="12" FontWeight="SemiBold"/>
+                                    <TextBlock Text="Sau n lần (chỉ KiotProxy)" FontSize="11" Foreground="#888"/>
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                    <CheckBox IsChecked="{Binding IsResetDcom}" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                    <Border BorderBrush="#dadce0" BorderThickness="1" Background="White" Width="50">
+                                        <TextBox Text="{Binding ResetDcomAfter}" IsEnabled="{Binding IsResetDcom}" BorderThickness="0" Padding="5" HorizontalContentAlignment="Center"/>
+                                    </Border>
+                                </StackPanel>
+                            </Grid>
+                        </StackPanel>
+                    </ScrollViewer>
+                    
+                    <Grid Grid.Row="2">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <Button Grid.Column="0" Content="Hủy" Command="{Binding CloseSettingsCommand}" Background="#f8f9fa" Foreground="#333" FontWeight="Bold" FontSize="14" Padding="0,10" Cursor="Hand" BorderBrush="#ccc" BorderThickness="1">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="4">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#e2e6ea"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        
+                        <Button Grid.Column="2" Content="Xong" Command="{Binding CloseSettingsCommand}" Background="#1a73e8" Foreground="White" FontWeight="Bold" FontSize="14" Padding="0,10" Cursor="Hand" BorderThickness="0">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="4">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#1557b0"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>
