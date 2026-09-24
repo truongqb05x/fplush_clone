@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 import time
 import random
 from selenium.webdriver.common.by import By
@@ -87,17 +87,58 @@ def login_with_credentials(driver, username, password):
             print("⚠️ Không tìm thấy nút Đăng nhập cụ thể, thử phím ENTER trên ô password")
             pass_input.send_keys(Keys.ENTER)
         
-        print("⏳ Đang chờ chuyển hướng sau khi click Đăng nhập...")
-        time.sleep(10)
-        
-        # Kiểm tra nếu vẫn ở trang login hoặc có lỗi
+        print("⏳ Đang chờ chuyển hướng sau khi click Đăng nhập (tối đa 30 giây)...")
+
+        # Polling mỗi 1 giây, tối đa 30 giây.
+        # Facebook hay đi qua nhiều bước trung gian:
+        #   login → facebook.com/ (thoáng) → two_step_verification → facebook.com/ (đích)
+        # → Chỉ kết luận THÀNH CÔNG khi URL thực sự là trang sạch (không login/two_step/checkpoint).
+        # → Tiếp tục chờ qua các bước trung gian cho đến hết 30 giây.
+        max_wait = 30
+        poll_interval = 1
+        elapsed = 0
+        success = False
+
+        while elapsed < max_wait:
+            time.sleep(poll_interval)
+            elapsed += poll_interval
+            url = driver.current_url.lower()
+
+            is_login     = "login"      in url
+            is_two_step  = "two_step"   in url or "two_factor" in url
+            is_checkpoint= "checkpoint" in url
+
+            if is_checkpoint:
+                # Checkpoint cứng — không tự giải quyết được, thoát sớm
+                print(f"⚠️ [{elapsed}s] Gặp checkpoint: {driver.current_url}")
+                break
+
+            if not is_login and not is_two_step and not is_checkpoint:
+                # URL sạch — đã qua hết bước trung gian
+                success = True
+                print(f"✅ [{elapsed}s] Login thành công. URL: {driver.current_url}")
+                break
+
+            # Vẫn đang ở trang trung gian (login / two_step) → tiếp tục chờ
+            print(f"   [{elapsed}s] Chờ... URL: {driver.current_url}")
+
+        if success:
+            return True
+
+        # Hết 30s hoặc gặp checkpoint → xử lý
         current_url = driver.current_url
-        if "login" in current_url.lower() or "checkpoint" in current_url.lower():
-            print(f"⚠️ Cảnh báo: Có thể login chưa thành công hoặc gặp checkpoint. URL: {current_url}")
-            return False
-            
-        print("✅ Login có vẻ đã thành công (hoặc đang chuyển hướng)")
-        return True
+        if "checkpoint" in current_url.lower():
+            from utils.helpers import is_soft_checkpoint
+            if is_soft_checkpoint(driver):
+                print("Đã xử lý CHECKPOINT TẠM THỜI (Dismiss). Đang load lại trang...")
+                driver.get("https://www.facebook.com/")
+                time.sleep(5)
+                if "checkpoint" not in driver.current_url.lower():
+                    print("✅ Login thành công sau khi vượt checkpoint tạm thời.")
+                    return True
+
+        print(f"⚠️ Login thất bại sau {elapsed}s. URL cuối: {current_url}")
+        return False
 
     except Exception as e:
         print(f"❌ Lỗi trong quá trình login: {e}")

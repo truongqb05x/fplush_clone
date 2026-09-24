@@ -1,7 +1,7 @@
 <Window x:Class="FPlusClone.Views.SettingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Cài đặt" Height="540" Width="700"
+        Title="Cài đặt" Height="480" Width="500"
         WindowStartupLocation="CenterOwner"
         ResizeMode="NoResize"
         Background="White"
@@ -57,69 +57,10 @@
             </Border>
 
             <!-- ══════════════════════════════════════════════════ -->
-            <!--  BODY: LEFT NAV  +  RIGHT CONTENT                  -->
+            <!--  BODY: CONTENT ONLY                                -->
             <!-- ══════════════════════════════════════════════════ -->
             <Grid Grid.Row="1">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="170"/>   <!-- Sidebar -->
-                    <ColumnDefinition Width="*"/>     <!-- Content -->
-                </Grid.ColumnDefinitions>
-
-                <!-- ── LEFT SIDEBAR ── -->
-                <Border Grid.Column="0" Background="#f8f9fa"
-                        BorderBrush="#dadce0" BorderThickness="0,0,1,0">
-                    <StackPanel Margin="0,8,0,0">
-
-                        <!-- Section: Luồng & Chrome -->
-                        <Border Background="#e8f0fe" BorderBrush="#1a73e8"
-                                BorderThickness="3,0,0,0" Margin="0,0,0,1">
-                            <StackPanel Orientation="Horizontal" Margin="14,12">
-                                <TextBlock Text="🔧" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <StackPanel>
-                                    <TextBlock Text="Luồng &amp; Chrome" FontSize="12"
-                                               FontWeight="Bold" Foreground="#1a73e8"/>
-                                    <TextBlock Text="Cấu hình chạy" FontSize="10" Foreground="#5f6368"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Section: Proxy (mờ hơn, không active) -->
-                        <Border Background="Transparent" Margin="0,0,0,1">
-                            <StackPanel Orientation="Horizontal" Margin="17,12">
-                                <TextBlock Text="🌐" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <StackPanel>
-                                    <TextBlock Text="Proxy" FontSize="12"
-                                               FontWeight="SemiBold" Foreground="#3c4043"/>
-                                    <TextBlock Text="Cài đặt kết nối" FontSize="10" Foreground="#5f6368"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <!-- Section: Chrome Options -->
-                        <Border Background="Transparent" Margin="0,0,0,1">
-                            <StackPanel Orientation="Horizontal" Margin="17,12">
-                                <TextBlock Text="🖥" FontSize="14" Margin="0,0,10,0" VerticalAlignment="Center"/>
-                                <StackPanel>
-                                    <TextBlock Text="Chrome" FontSize="12"
-                                               FontWeight="SemiBold" Foreground="#3c4043"/>
-                                    <TextBlock Text="Tùy chọn trình duyệt" FontSize="10" Foreground="#5f6368"/>
-                                </StackPanel>
-                            </StackPanel>
-                        </Border>
-
-                        <Separator Background="#dadce0" Margin="12,8"/>
-
-                        <StackPanel Margin="14,4">
-                            <TextBlock Text="settings.json" FontSize="10"
-                                       Foreground="#9aa0a6" FontFamily="Consolas"/>
-                            <TextBlock Text="Tự động lưu khi nhấn Lưu"
-                                       FontSize="10" Foreground="#9aa0a6" TextWrapping="Wrap"/>
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- ── RIGHT CONTENT ── -->
-                <ScrollViewer Grid.Column="1" VerticalScrollBarVisibility="Auto"
+                <ScrollViewer VerticalScrollBarVisibility="Auto"
                               Background="White">
                     <StackPanel Margin="28,20,28,20">
 
@@ -129,47 +70,36 @@
                                    Margin="0,0,0,4"/>
                         <Separator Background="#e8f0fe" Margin="0,0,0,16"/>
 
-                        <!-- Số luồng -->
+                        <!-- Đường dẫn profile -->
                         <Grid Margin="0,0,0,16">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="80"/>
+                                <ColumnDefinition Width="200"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
-                                <TextBlock Text="Số luồng chạy" FontSize="12"
+                                <TextBlock Text="Đường dẫn profile Chrome" FontSize="12"
                                            FontWeight="SemiBold" Foreground="#202124"/>
-                                <TextBlock Text="Số tài khoản được xử lý song song cùng lúc"
+                                <TextBlock Text="Thư mục lưu trữ profile, để trống sẽ dùng mặc định"
                                            FontSize="11" Foreground="#5f6368" Margin="0,2,0,0"/>
                             </StackPanel>
-                            <Border Grid.Column="1" BorderBrush="#dadce0" BorderThickness="1"
-                                    Background="White">
-                                <TextBox Text="{Binding ThreadCount, UpdateSourceTrigger=PropertyChanged}"
-                                         Padding="8,6" FontSize="13" BorderThickness="0"
-                                         HorizontalContentAlignment="Center"
-                                         VerticalContentAlignment="Center"/>
-                            </Border>
+                            <Grid Grid.Column="1">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" BorderBrush="#dadce0" BorderThickness="1" Background="White">
+                                    <TextBox Text="{Binding ProfilePath, UpdateSourceTrigger=PropertyChanged}"
+                                             Padding="8,6" FontSize="12" BorderThickness="0"
+                                             VerticalContentAlignment="Center"/>
+                                </Border>
+                                <Button Grid.Column="1" Content="..." Command="{Binding SelectProfilePathCommand}"
+                                        Width="30" Margin="4,0,0,0"
+                                        Background="#f1f3f4" BorderBrush="#dadce0" BorderThickness="1"
+                                        Cursor="Hand"/>
+                            </Grid>
                         </Grid>
 
-                        <!-- Số Chrome/hàng -->
-                        <Grid Margin="0,0,0,20">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="80"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
-                                <TextBlock Text="Số Chrome trên 1 hàng" FontSize="12"
-                                           FontWeight="SemiBold" Foreground="#202124"/>
-                                <TextBlock Text="Bố cục cửa sổ Chrome khi chạy nhiều profile"
-                                           FontSize="11" Foreground="#5f6368" Margin="0,2,0,0"/>
-                            </StackPanel>
-                            <Border Grid.Column="1" BorderBrush="#dadce0" BorderThickness="1"
-                                    Background="White">
-                                <TextBox Text="{Binding ChromePerRow, UpdateSourceTrigger=PropertyChanged}"
-                                         Padding="8,6" FontSize="13" BorderThickness="0"
-                                         HorizontalContentAlignment="Center"
-                                         VerticalContentAlignment="Center"/>
-                            </Border>
-                        </Grid>
+
 
                         <!-- ══ SECTION 2: Proxy ══ -->
                         <TextBlock Text="Cấu hình Proxy"
@@ -177,35 +107,116 @@
                                    Margin="0,4,0,4"/>
                         <Separator Background="#e8f0fe" Margin="0,0,0,16"/>
 
-                        <!-- Toggle: Dùng Proxy -->
+                        <!-- Chọn Proxy -->
                         <Grid Margin="0,0,0,12">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="150"/>
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,16,0">
-                                <TextBlock Text="Bật Proxy" FontSize="12"
+                                <TextBlock Text="Phương thức Proxy" FontSize="12"
                                            FontWeight="SemiBold" Foreground="#202124"/>
-                                <TextBlock Text="Gán proxy cho tài khoản khi chạy tác vụ"
+                                <TextBlock Text="Chọn loại proxy để sử dụng"
                                            FontSize="11" Foreground="#5f6368" Margin="0,2,0,0"/>
                             </StackPanel>
-                            <CheckBox Grid.Column="1" IsChecked="{Binding UseProxy}"
-                                      VerticalAlignment="Center"/>
+                            <Border Grid.Column="1" BorderBrush="#dadce0" BorderThickness="1" Background="White">
+                                <ComboBox SelectedIndex="{Binding ProxyMethod, UpdateSourceTrigger=PropertyChanged}"
+                                          Padding="8,6" FontSize="12" BorderThickness="0"
+                                          VerticalContentAlignment="Center" Background="White">
+                                    <ComboBoxItem Content="Không dùng"/>
+                                    <ComboBoxItem Content="Proxy tĩnh"/>
+                                    <ComboBoxItem Content="KiotProxy"/>
+                                </ComboBox>
+                            </Border>
                         </Grid>
 
-                        <!-- Proxy list -->
-                        <TextBlock Text="Danh sách Proxy  (1 proxy / dòng — ip:port  hoặc  ip:port:user:pass)"
-                                   FontSize="11" Foreground="#5f6368" Margin="0,0,0,6"/>
-                        <Border BorderBrush="#dadce0" BorderThickness="1">
-                            <TextBox Text="{Binding ProxyList, UpdateSourceTrigger=PropertyChanged}"
-                                     AcceptsReturn="True" TextWrapping="Wrap"
-                                     Height="80" Padding="10,8"
-                                     FontSize="12" FontFamily="Consolas"
-                                     BorderThickness="0"
-                                     VerticalScrollBarVisibility="Auto"
-                                     IsEnabled="{Binding UseProxy}"
-                                     Background="White"/>
-                        </Border>
+                        <!-- Proxy list section (only visible when IsStaticProxy = true) -->
+                        <StackPanel Margin="0,0,0,8">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsStaticProxy}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+
+                            <!-- Toggle list -->
+                            <Grid Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="Nhập danh sách proxy tĩnh" FontSize="12"
+                                               FontWeight="SemiBold" Foreground="#202124"/>
+                                    <TextBlock Text="Tích vào để hiển thị và sửa danh sách proxy"
+                                               FontSize="11" Foreground="#5f6368" Margin="0,2,0,0"/>
+                                </StackPanel>
+                                <CheckBox Grid.Column="1" IsChecked="{Binding UseProxy}"
+                                          VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <!-- Textbox proxy list -->
+                            <StackPanel>
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding UseProxy}" Value="True">
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text="Danh sách Proxy  (1 proxy / dòng — ip:port  hoặc  ip:port:user:pass)"
+                                           FontSize="11" Foreground="#5f6368" Margin="0,0,0,6"/>
+                                <Border BorderBrush="#dadce0" BorderThickness="1">
+                                    <TextBox Text="{Binding ProxyList, UpdateSourceTrigger=PropertyChanged}"
+                                             AcceptsReturn="True" TextWrapping="Wrap"
+                                             Height="80" Padding="10,8"
+                                             FontSize="12" FontFamily="Consolas"
+                                             BorderThickness="0"
+                                             VerticalScrollBarVisibility="Auto"
+                                             Background="White"/>
+                                </Border>
+                            </StackPanel>
+                        </StackPanel>
+
+                        <!-- Kiot Proxy Key (only visible when IsKiotProxy = true) -->
+                        <StackPanel Margin="0,0,0,8">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsKiotProxy}" Value="True">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
+                                    <TextBlock Text="KiotProxy API Key" FontSize="12"
+                                               FontWeight="SemiBold" Foreground="#202124"/>
+                                    <TextBlock Text="Nhập mã key KiotProxy của bạn"
+                                               FontSize="11" Foreground="#5f6368" Margin="0,2,0,0"/>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <Border BorderBrush="#dadce0" BorderThickness="1" Background="White">
+                                <TextBox Text="{Binding KiotProxyKey, UpdateSourceTrigger=PropertyChanged}"
+                                         Padding="8,6" FontSize="12" BorderThickness="0"
+                                         VerticalContentAlignment="Center"/>
+                            </Border>
+                        </StackPanel>
 
                         <!-- ══ SECTION 3: Chrome Options ══ -->
                         <TextBlock Text="Tùy chọn Chrome"

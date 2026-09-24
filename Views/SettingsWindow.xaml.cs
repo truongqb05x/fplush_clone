@@ -34,15 +34,39 @@ namespace FPlusClone.Views
         private bool _useProxy;
         public bool UseProxy { get => _useProxy; set => SetProperty(ref _useProxy, value); }
 
+        private int _proxyMethod;
+        public int ProxyMethod 
+        { 
+            get => _proxyMethod; 
+            set 
+            {
+                if (SetProperty(ref _proxyMethod, value))
+                {
+                    OnPropertyChanged(nameof(IsStaticProxy));
+                    OnPropertyChanged(nameof(IsKiotProxy));
+                }
+            }
+        }
+        
+        public bool IsStaticProxy => ProxyMethod == 1;
+        public bool IsKiotProxy => ProxyMethod == 2;
+
+        private string _kiotProxyKey;
+        public string KiotProxyKey { get => _kiotProxyKey; set => SetProperty(ref _kiotProxyKey, value); }
+
         private bool _disableImageLoad;
         public bool DisableImageLoad { get => _disableImageLoad; set => SetProperty(ref _disableImageLoad, value); }
 
         private bool _hideChrome;
         public bool HideChrome { get => _hideChrome; set => SetProperty(ref _hideChrome, value); }
 
+        private string _profilePath;
+        public string ProfilePath { get => _profilePath; set => SetProperty(ref _profilePath, value); }
+
         // ── Commands ────────────────────────────────────────────────
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
+        public ICommand SelectProfilePathCommand { get; }
 
         public bool? DialogResult { get; private set; }
         public event Action RequestClose;
@@ -79,8 +103,11 @@ namespace FPlusClone.Views
             ChromePerRow     = s.ChromePerRow;
             ProxyList        = s.ProxyList;
             UseProxy         = s.UseProxy;
+            ProxyMethod      = s.ProxyMethod;
+            KiotProxyKey     = s.KiotProxyKey;
             DisableImageLoad = s.DisableImageLoad;
             HideChrome       = s.HideChrome;
+            ProfilePath      = s.ProfilePath;
 
             SaveCommand = new RelayCommand(_ =>
             {
@@ -90,8 +117,11 @@ namespace FPlusClone.Views
                     ChromePerRow     = ChromePerRow,
                     ProxyList        = ProxyList ?? "",
                     UseProxy         = UseProxy,
+                    ProxyMethod      = ProxyMethod,
+                    KiotProxyKey     = KiotProxyKey ?? "",
                     DisableImageLoad = DisableImageLoad,
-                    HideChrome       = HideChrome
+                    HideChrome       = HideChrome,
+                    ProfilePath      = ProfilePath ?? ""
                 });
                 DialogResult = true;
                 RequestClose?.Invoke();
@@ -101,6 +131,25 @@ namespace FPlusClone.Views
             {
                 DialogResult = false;
                 RequestClose?.Invoke();
+            });
+
+            SelectProfilePathCommand = new RelayCommand(_ =>
+            {
+                var dialog = new Microsoft.Win32.OpenFileDialog
+                {
+                    ValidateNames = false,
+                    CheckFileExists = false,
+                    CheckPathExists = true,
+                    FileName = "Folder Selection"
+                };
+                if (dialog.ShowDialog() == true)
+                {
+                    var folder = Path.GetDirectoryName(dialog.FileName);
+                    if (!string.IsNullOrEmpty(folder))
+                    {
+                        ProfilePath = folder;
+                    }
+                }
             });
         }
     }

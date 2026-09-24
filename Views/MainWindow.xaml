@@ -355,7 +355,7 @@
                                 <MenuItem Header="Check..."/>
                                 <Separator/>
                                 <MenuItem Header="Chạy tính năng"/>
-                                <MenuItem Header="View in Chrome"/>
+                                <MenuItem Header="View in Chrome" Command="{Binding ViewInChromeCommand}" CommandParameter="{Binding RelativeSource={RelativeSource AncestorType=ContextMenu}, Path=PlacementTarget.SelectedItems}"/>
                                 <MenuItem Header="Login with User|Pass"/>
                                 <MenuItem Header="Copy">
                                     <MenuItem Header="Copy UID" Command="{Binding CopyAccountsCommand}">
@@ -538,7 +538,7 @@
 
                 <StackPanel Grid.Column="1" Margin="10,0,0,0">
                     <Button Content="Thêm Tài Khoản" Command="{Binding ShowImportAccountCommand}" Style="{StaticResource ModernButton}" Margin="0,0,0,5"/>
-                    <Button Content="Login Chrome" Style="{StaticResource ModernButton}" Margin="0,0,0,5" Background="{DynamicResource PrimaryBlueBrush}" Foreground="White" BorderThickness="0"/>
+                    <Button Content="Login Chrome" Command="{Binding LoginChromeCommand}" CommandParameter="{Binding ElementName=dgAccounts, Path=SelectedItems}" Style="{StaticResource ModernButton}" Margin="0,0,0,5" Background="{DynamicResource PrimaryBlueBrush}" Foreground="White" BorderThickness="0"/>
                     <Button Content="Import Từ File" Command="{Binding ImportFromFileCommand}" Style="{StaticResource ModernButton}" Margin="0,0,20,5"/>
 
                     <Button Content="⚙  Cài đặt" Command="{Binding ShowSettingsCommand}"
@@ -695,49 +695,47 @@
                     </Grid.RowDefinitions>
 
                     <!-- Header -->
-                    <Border Grid.Row="0" Background="White" Padding="20" BorderBrush="#dadce0" BorderThickness="0,0,0,1" CornerRadius="12,12,0,0">
+                    <Border Grid.Row="0" Background="#f0f0f0" Padding="15" BorderBrush="#ccc" BorderThickness="0,0,0,1">
                         <DockPanel>
-                            <Button DockPanel.Dock="Right" Content="✕" Command="{Binding ToggleModalCommand}" Background="Transparent" BorderThickness="0" FontSize="18" Foreground="#666" Cursor="Hand" VerticalAlignment="Top"/>
-                            <StackPanel>
-                                <TextBlock Text="CHỌN CHỨC NĂNG MỚI" FontSize="18" FontWeight="Bold" Foreground="{DynamicResource PrimaryBlueBrush}" Margin="0,0,0,5"/>
-                                <TextBlock Text="Chọn một trong các chức năng bên dưới để hiển thị giao diện cấu hình." FontSize="13" Foreground="#666"/>
+                            <Button DockPanel.Dock="Right" Content="Đóng" Command="{Binding ToggleModalCommand}" Background="Transparent" BorderThickness="1" BorderBrush="#aaa" Padding="10,2" FontSize="12" Foreground="#333" Cursor="Hand" VerticalAlignment="Center"/>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="CHỌN CHỨC NĂNG" FontSize="14" FontWeight="Bold" Foreground="#333" Margin="0,0,0,3"/>
+                                <TextBlock Text="Vui lòng chọn chức năng bạn muốn mở." FontSize="12" Foreground="#666"/>
                             </StackPanel>
                         </DockPanel>
                     </Border>
 
                     <!-- Function List -->
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20">
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Background="#fff" Padding="10">
                         <ItemsControl ItemsSource="{Binding AvailableFunctions}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
-                                    <WrapPanel Orientation="Horizontal" HorizontalAlignment="Center"/>
+                                    <StackPanel Orientation="Vertical"/>
                                 </ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Button Command="{Binding DataContext.AddTabCommand, RelativeSource={RelativeSource AncestorType=Window}}" 
                                             CommandParameter="{Binding}"
-                                            Margin="10" Width="280" Height="100" Cursor="Hand">
+                                            Margin="5" HorizontalAlignment="Stretch" MinHeight="40" Cursor="Hand">
                                         <Button.Style>
                                             <Style TargetType="Button">
-                                                <Setter Property="Background" Value="White"/>
+                                                <Setter Property="Background" Value="#f9f9f9"/>
                                                 <Setter Property="BorderThickness" Value="1"/>
-                                                <Setter Property="BorderBrush" Value="#dadce0"/>
+                                                <Setter Property="BorderBrush" Value="#ccc"/>
+                                                <Setter Property="Padding" Value="10"/>
                                                 <Setter Property="Template">
                                                     <Setter.Value>
                                                         <ControlTemplate TargetType="Button">
                                                             <Border Background="{TemplateBinding Background}" 
                                                                     BorderBrush="{TemplateBinding BorderBrush}" 
                                                                     BorderThickness="{TemplateBinding BorderThickness}" 
-                                                                    CornerRadius="8" Padding="15">
-                                                                <Border.Effect>
-                                                                    <DropShadowEffect Color="#000000" Opacity="0.05" BlurRadius="6" ShadowDepth="1"/>
-                                                                </Border.Effect>
+                                                                    Padding="{TemplateBinding Padding}">
                                                                 <DockPanel>
-                                                                    <TextBlock Text="⚡" FontSize="24" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,15,0" Foreground="{DynamicResource PrimaryBlueBrush}"/>
+                                                                    <TextBlock Text="▶" FontSize="10" DockPanel.Dock="Left" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#555"/>
                                                                     <StackPanel VerticalAlignment="Center">
-                                                                        <TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="14" Foreground="#333" Margin="0,0,0,5"/>
-                                                                        <TextBlock Text="{Binding Description}" FontSize="12" Foreground="#666" TextWrapping="Wrap"/>
+                                                                        <TextBlock Text="{Binding Name}" FontWeight="SemiBold" FontSize="13" Foreground="#000"/>
+                                                                        <TextBlock Text="{Binding Description}" FontSize="11" Foreground="#555" TextWrapping="Wrap" Margin="0,2,0,0"/>
                                                                     </StackPanel>
                                                                 </DockPanel>
                                                             </Border>
@@ -746,8 +744,11 @@
                                                 </Setter>
                                                 <Style.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="True">
-                                                        <Setter Property="Background" Value="#f8faff"/>
-                                                        <Setter Property="BorderBrush" Value="{DynamicResource PrimaryBlueBrush}"/>
+                                                        <Setter Property="Background" Value="#e6f0fa"/>
+                                                        <Setter Property="BorderBrush" Value="#99ccee"/>
+                                                    </Trigger>
+                                                    <Trigger Property="IsPressed" Value="True">
+                                                        <Setter Property="Background" Value="#cce4f7"/>
                                                     </Trigger>
                                                 </Style.Triggers>
                                             </Style>
@@ -782,9 +783,57 @@
             </Border.Style>
             <Border Background="White" CornerRadius="10" Padding="30" VerticalAlignment="Center" HorizontalAlignment="Center" Width="350">
                 <StackPanel>
-                    <TextBlock Text="{Binding ProgressMessage}" FontSize="18" FontWeight="Bold" HorizontalAlignment="Center" Margin="0,0,0,20"/>
-                    <ProgressBar Height="15" Minimum="0" Maximum="{Binding ProgressTotal}" Value="{Binding ProgressCurrent}" Margin="0,0,0,10"/>
-                    <TextBlock HorizontalAlignment="Center" FontSize="14" Foreground="#666">
+                    <!-- Spinning Animation -->
+                    <Grid Width="40" Height="40" HorizontalAlignment="Center" Margin="0,0,0,20" RenderTransformOrigin="0.5,0.5">
+                        <Grid.RenderTransform>
+                            <RotateTransform x:Name="SpinnerTransform" Angle="0" />
+                        </Grid.RenderTransform>
+                        <Grid.Triggers>
+                            <EventTrigger RoutedEvent="Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="SpinnerTransform" 
+                                                         Storyboard.TargetProperty="Angle" 
+                                                         From="0" To="360" Duration="0:0:1" 
+                                                         RepeatBehavior="Forever" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </Grid.Triggers>
+                        <!-- Spinner Visuals -->
+                        <!-- Vòng nền nhạt -->
+                        <Ellipse Stroke="#e8ecef" StrokeThickness="4" Width="42" Height="42"/>
+                        <!-- Vòng quay màu xanh (đứt đoạn để tạo cảm giác xoay) -->
+                        <Ellipse Stroke="#1a73e8" StrokeThickness="4" Width="42" Height="42" 
+                                 StrokeDashArray="20 12" StrokeDashCap="Round" />
+                    </Grid>
+
+                    <TextBlock Text="{Binding ProgressMessage}" FontSize="16" FontWeight="SemiBold" Foreground="#333" HorizontalAlignment="Center" Margin="0,0,0,10"/>
+                    
+                    <ProgressBar Height="6" Minimum="0" Maximum="{Binding ProgressTotal}" Value="{Binding ProgressCurrent}" Margin="0,0,0,10" Background="#f0f0f0" Foreground="#1a73e8" BorderThickness="0">
+                        <ProgressBar.Style>
+                            <Style TargetType="ProgressBar">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ProgressTotal}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ProgressBar.Style>
+                    </ProgressBar>
+
+                    <TextBlock HorizontalAlignment="Center" FontSize="13" Foreground="#666">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ProgressTotal}" Value="0">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
                         <Run Text="Đang xử lý: "/>
                         <Run Text="{Binding ProgressCurrent, Mode=OneWay}"/>
                         <Run Text=" / "/>

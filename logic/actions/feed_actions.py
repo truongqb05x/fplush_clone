@@ -43,10 +43,34 @@ def warm_up_account(driver, uid, warmup_time=None):
                     # Click trực tiếp trong cùng tab
                     target.click()
                     
-                    # Chờ 5-10s giả lập đang đọc
+                    # Tính toán thời gian xem sao cho không vượt quá thời gian nuôi còn lại
+                    remaining_time = warmup_time - (time.time() - start_time)
                     wait_view = random.randint(5, 50)
-                    print(f"[{uid}] ⏳ Đang xem nội dung trong {wait_view}s...")
-                    time.sleep(wait_view)
+                    
+                    # Cắt giảm thời gian xem nếu sắp hết giờ (chừa lại 3s để load & back)
+                    if wait_view > remaining_time - 3:
+                        wait_view = int(remaining_time - 3)
+                    
+                    if wait_view > 0:
+                        print(f"[{uid}] ⏳ Đang xem nội dung trong {wait_view}s...")
+                        end_view_time = time.time() + wait_view
+                        
+                        # Vòng lặp cuộn dần dần để giả lập người dùng đọc nội dung
+                        while time.time() < end_view_time:
+                            scroll_dist = random.randint(100, 300)
+                            try:
+                                driver.execute_script(f"window.scrollBy(0, {scroll_dist});")
+                            except:
+                                pass
+                            
+                            chunk_sleep = random.uniform(2, 5)
+                            if time.time() + chunk_sleep > end_view_time:
+                                time.sleep(max(0, end_view_time - time.time()))
+                                break
+                            else:
+                                time.sleep(chunk_sleep)
+                    else:
+                        print(f"[{uid}] ⏳ Không đủ thời gian còn lại để xem chi tiết, chuẩn bị quay lại.")
                     
                     # Quay lại Feed để tiếp tục nuôi
                     driver.back()
@@ -59,5 +83,10 @@ def warm_up_account(driver, uid, warmup_time=None):
         # Ngẫu nhiên thả cảm xúc (Giảm xuống còn khoảng 5% cơ hội mỗi lần cuộn để tránh spam Like)
         if random.random() < 0.05:
             random_like_post(driver, uid)
+            
+        # Thi thoảng (tỷ lệ 8%) đi kiểm tra thông báo
+        if random.random() < 0.08:
+            from actions.read_notifications import read_one_random_notification
+            read_one_random_notification(driver, uid)
 
     print(f"[{uid}] ✅ Hoàn thành warm-up.")

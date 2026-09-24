@@ -11,13 +11,15 @@ else:
     sys.path.append(os.getcwd())
 
 from utils.driver_utils import create_driver
+from selenium.webdriver.common.by import By
+from utils.helpers import is_logged_out
 import threading
 
 # Global cache for joined groups: {uid: [group_data, ...]}
 GROUP_CACHE = {}
 CACHE_LOCK = threading.Lock()
 
-def get_joined_groups(driver, max_scrolls=5, uid=None):
+def get_joined_groups(driver, max_scrolls=3, uid=None):
     """
     Navigates to the Joined Groups page and extracts all group links and UIDs.
     Uses memory cache if uid is provided to avoid rescanning in the same session.
@@ -29,18 +31,24 @@ def get_joined_groups(driver, max_scrolls=5, uid=None):
                 return GROUP_CACHE[uid]
 
     url = "https://www.facebook.com/groups/joins/?nav_source=tab"
-    print(f"📂 [Scan] Navigating to joined groups page...")
-    driver.get(url)
-    time.sleep(4)
     
     seen_urls = set()
     group_data = []
 
-    # Scroll loop to load more groups
-    for i in range(max_scrolls):
-        print(f"   📜 Scrolling to load more groups ({i+1}/{max_scrolls})...")
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-        time.sleep(3)
+    for attempt in range(3):
+        if is_logged_out(driver):
+            print(f"⚠️ [Scan] Phát hiện tài khoản đã bị đăng xuất!")
+            return "LOGGED_OUT"
+            
+        print(f"📂 [Scan] Navigating to joined groups page (Attempt {attempt+1}/3)...")
+        driver.get(url)
+        time.sleep(4)
+        
+        # Scroll loop to load more groups
+        for i in range(max_scrolls):
+            print(f"   📜 Scrolling to load more groups ({i+1}/{max_scrolls})...")
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(3)
         
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         # Tìm tất cả các item trong danh sách nhóm
@@ -88,7 +96,7 @@ def get_joined_groups(driver, max_scrolls=5, uid=None):
                 
                 # Extract UID
                 uid_match = re.search(r'/groups/(\d+)/?$', clean_url)
-                uid = uid_match.group(1) if uid_match else "N/A"
+                group_uid = uid_match.group(1) if uid_match else "N/A"
                 
                 # Extract Name
                 name = link_tag.get_text(strip=True)
@@ -99,18 +107,22 @@ def get_joined_groups(driver, max_scrolls=5, uid=None):
                 
                 if not name: name = "Unknown Group"
                 
-                print(f"      ✅ [Keep] Chấp nhận nhóm: '{name}' (UID: {uid})")
+                print(f"      ✅ [Keep] Chấp nhận nhóm: '{name}' (UID: {group_uid})")
 
                 group_data.append({
                     'name': name,
                     'link': clean_url,
-                    'uid': uid
+                    'uid': group_uid
                 })
         
-        # Stop if we seem to have reached the end (page height doesn't change)
-        # Or just stick to max_scrolls for safety
-        
-    print(f"✅ [Scan] Finished. Found {len(group_data)} groups total.")
+        # Ngưng scroll nếu không thấy nhóm nào và retry
+        if group_data:
+            break
+        else:
+            print(f"   ⚠️ Không tìm thấy nhóm nào (lạc trang), sẽ thử tải lại trang...")
+            time.sleep(5)
+
+    print(f"🎉 [Scan] Finished. Found {len(group_data)} groups total.")
     
     if uid and group_data:
         with CACHE_LOCK:

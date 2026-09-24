@@ -180,6 +180,8 @@ namespace FPlusClone.ViewModels
         public ICommand CopyAccountsCommand { get; }
         public ICommand BulkEditCommand { get; }
         public ICommand ShowSettingsCommand { get; }
+        public ICommand LoginChromeCommand { get; }
+        public ICommand ViewInChromeCommand { get; }
 
         public MainViewModel()
         {
@@ -226,6 +228,16 @@ namespace FPlusClone.ViewModels
                 };
                 if (win.ShowDialog() == true)
                     Log($"System: Settings saved.");
+            });
+
+            LoginChromeCommand = new RelayCommand(obj =>
+            {
+                RunPythonScript("2", obj as IList);
+            });
+
+            ViewInChromeCommand = new RelayCommand(obj =>
+            {
+                RunPythonScript("6", obj as IList);
             });
 
             SelectTabCommand = new RelayCommand(obj =>
@@ -745,6 +757,99 @@ namespace FPlusClone.ViewModels
                 }
                 SaveAccounts();
                 Log($"System: Bulk edited '{field}' for {selectedItems.Count} items.");
+            }
+        }
+
+        private async void RunPythonScript(string mode, IList selectedList)
+        {
+            var selected = selectedList?.Cast<FacebookAccount>().ToList() ?? new List<FacebookAccount>();
+            if (selected.Count == 0)
+            {
+                selected = Accounts.Where(a => a.IsSelected).ToList();
+                if (selected.Count == 0)
+                {
+                    System.Windows.MessageBox.Show("Vui lòng chọn ít nhất một tài khoản.", "Thông báo", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+                    return;
+                }
+            }
+
+            try
+            {
+                IsLoading = true;
+                ProgressMessage = "Đang khởi tạo...";
+                ProgressTotal = 0; // Hide progress bar for now
+                string baseDir = AppDomain.CurrentDomain.BaseDirectory;
+                string logicDir = Path.Combine(baseDir, "Logic");
+                if (!File.Exists(Path.Combine(logicDir, "main.py")))
+                {
+                    logicDir = Path.GetFullPath(Path.Combine(baseDir, @"..\..\..\Logic"));
+                }
+                string resourcesDir = Path.Combine(logicDir, "resources");
+                if (!Directory.Exists(resourcesDir)) Directory.CreateDirectory(resourcesDir);
+
+                // --- PROXY ASSIGNMENT LOGIC ---
+                var settings = Views.SettingsViewModel.Load();
+                var proxyList = settings.ProxyList?.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList() ?? new List<string>();
+                Random rnd = new Random();
+                bool needSave = false;
+
+                foreach (var acc in selected)
+                {
+                    if (string.IsNullOrEmpty(acc.Proxy))
+                    {
+                        if (settings.ProxyMethod == 1 && proxyList.Count > 0)
+                        {
+                            acc.Proxy = proxyList[rnd.Next(proxyList.Count)];
+                            needSave = true;
+                        }
+                        else if (settings.ProxyMethod == 2 && !string.IsNullOrEmpty(settings.KiotProxyKey))
+                        {
+                            acc.Proxy = settings.KiotProxyKey;
+                            needSave = true;
+                        }
+                    }
+                }
+                
+                if (needSave)
+                {
+                    SaveAccounts();
+                    System.Windows.Application.Current.Dispatcher.Invoke(() => ItemsView?.Refresh());
+                }
+                // -----------------------------
+
+                string cookieFile = Path.Combine(resourcesDir, "account.txt");
+                var sb = new StringBuilder();
+                foreach (var acc in selected)
+                {
+                    sb.AppendLine(FormatAccountSimple(acc, "Full"));
+                }
+                File.WriteAllText(cookieFile, sb.ToString());
+
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "python",
+                    Arguments = $"main.py {mode}",
+                    WorkingDirectory = logicDir,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+
+                var proc = System.Diagnostics.Process.Start(psi);
+                if (proc != null)
+                {
+                    ProgressMessage = "Đang khởi chạy luồng...";
+                    await Task.Delay(1500); // Giữ loading 1.5s để thể hiện logic C# đã xử lý xong
+                }
+
+                Log($"System: Đã khởi chạy thành công script Python (chế độ {mode}) cho {selected.Count} tài khoản.");
+            }
+            catch (Exception ex)
+            {
+                Log($"Error running script: {ex.Message}");
+            }
+            finally
+            {
+                IsLoading = false;
             }
         }
 

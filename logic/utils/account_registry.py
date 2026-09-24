@@ -7,10 +7,12 @@ from utils.driver_utils import load_user_agents, get_random_ua
 
 # Constants
 ACCOUNT_PROXY_FILE = "resources/account_proxy.json"
+ACCOUNT_KIOT_FILE = "resources/account_kiot.json"
 ACCOUNT_UA_FILE = "resources/account_ua.json"
 
 # Locks
 PROXY_MAP_LOCK = threading.Lock()
+KIOT_MAP_LOCK = threading.Lock()
 UA_MAP_LOCK = threading.Lock()
 
 def load_proxy_mapping():
@@ -29,6 +31,24 @@ def save_proxy_mapping(mapping):
     with PROXY_MAP_LOCK:
         os.makedirs(os.path.dirname(ACCOUNT_PROXY_FILE), exist_ok=True)
         with open(ACCOUNT_PROXY_FILE, "w", encoding="utf-8") as f:
+            json.dump(mapping, f, indent=4)
+
+def load_kiot_mapping():
+    """Tải mapping UID -> Kiot Key từ JSON"""
+    with KIOT_MAP_LOCK:
+        if os.path.exists(ACCOUNT_KIOT_FILE):
+            try:
+                with open(ACCOUNT_KIOT_FILE, "r", encoding="utf-8") as f:
+                    return json.load(f)
+            except:
+                return {}
+        return {}
+
+def save_kiot_mapping(mapping):
+    """Lưu mapping UID -> Kiot Key vào JSON"""
+    with KIOT_MAP_LOCK:
+        os.makedirs(os.path.dirname(ACCOUNT_KIOT_FILE), exist_ok=True)
+        with open(ACCOUNT_KIOT_FILE, "w", encoding="utf-8") as f:
             json.dump(mapping, f, indent=4)
 
 def load_ua_mapping():
@@ -86,6 +106,27 @@ def get_assigned_proxy(uid, all_proxies, mapping):
     if all_proxies:
         p = random.choice(all_proxies)
         return f"{p['host']}:{p['port']}:{p['user']}:{p['pass']}"
+    return None
+
+def get_assigned_kiot(uid, all_keys, mapping):
+    """Lấy Kiot Key đã gán hoặc gán mới duy nhất cho UID"""
+    if not all_keys:
+        return None
+        
+    if uid in mapping:
+        return mapping[uid]
+    
+    assigned_keys = set(mapping.values())
+    for key in all_keys:
+        if key not in assigned_keys:
+            mapping[uid] = key
+            save_kiot_mapping(mapping)
+            return key
+            
+    print(f"⚠️ Hết Kiot Key duy nhất cho UID {uid}, chọn ngẫu nhiên...")
+    if all_keys:
+        k = random.choice(all_keys)
+        return k
     return None
 
 def parse_proxy_str(proxy_str):

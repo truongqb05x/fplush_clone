@@ -7,6 +7,8 @@ from selenium.webdriver.support import expected_conditions as EC
 # XPath nút Tham gia nhóm (dùng chung)
 _JOIN_BTN_XPATH = (
     "//div[@aria-label='Tham gia nhóm' and @role='button']"
+    " | //div[@aria-label='Join group' and @role='button']"
+    " | //div[@aria-label='Join Group' and @role='button']"
 )
 
 # XPath kiểm tra đã tham gia / đã gửi yêu cầu
@@ -14,10 +16,18 @@ _ALREADY_JOINED_XPATH = (
     "//div[@aria-label='Hủy yêu cầu' and @role='button']"
     " | //div[@aria-label='Đã tham gia' and @role='button']"
     " | //div[@aria-label='Yêu cầu đang chờ xử lý' and @role='button']"
+    " | //div[@aria-label='Joined' and @role='button']"
+    " | //div[@aria-label='Pending' and @role='button']"
+    " | //div[@aria-label='Pending request' and @role='button']"
+    " | //div[@aria-label='Cancel request' and @role='button']"
     " | //span[contains(text(), 'Hủy yêu cầu')]"
     " | //span[contains(text(), 'Đã tham gia')]"
     " | //span[contains(text(), 'Yêu cầu đang chờ')]"
     " | //span[contains(text(), 'Đã gửi yêu cầu')]"
+    " | //span[contains(text(), 'Joined')]"
+    " | //span[contains(text(), 'Pending')]"
+    " | //span[contains(text(), 'Request sent')]"
+    " | //span[contains(text(), 'Cancel request')]"
 )
 
 def _is_already_joined(driver):
@@ -29,7 +39,13 @@ def _is_already_joined(driver):
     except Exception:
         pass
     src = driver.page_source
-    return any(kw in src for kw in ["Đã tham gia", "Đã gửi yêu cầu", "Hủy yêu cầu", "Yêu cầu đang chờ"])
+    # Dùng keyword tiếng Anh trong page_source rất dễ bị dính false positive (có trong script/json).
+    # Vì vậy với tiếng Anh chỉ check khi nó nằm giữa các thẻ HTML hoặc có dấu ngoặc kép.
+    if any(kw in src for kw in ["Đã tham gia", "Đã gửi yêu cầu", "Hủy yêu cầu", "Yêu cầu đang chờ"]):
+        return True
+    if any(kw in src for kw in [">Joined<", ">Pending<", ">Request sent<", ">Cancel request<", '"Joined"', '"Pending"']):
+        return True
+    return False
 
 def join_single_group(driver, wait, uid, group_id):
     """
@@ -66,11 +82,16 @@ def join_single_group(driver, wait, uid, group_id):
         for attempt in range(3):
             try:
                 # Dùng XPath mở rộng để tìm nút (span lồng sâu, aria-label, text trực tiếp)
+                # Sử dụng translate để không phân biệt hoa thường cho 'join group'
                 join_btn_xpath_full = (
                     "//div[@aria-label='Tham gia nhóm' and @role='button']"
+                    " | //div[contains(translate(@aria-label, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'join group') and @role='button']"
                     " | //span[text()='Tham gia nhóm']"
+                    " | //span[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'join group')]"
                     " | //span[.//span[text()='Tham gia nhóm']]"
+                    " | //span[.//span[contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'join group')]]"
                     " | //a[contains(@href, 'join') and contains(., 'Tham gia nhóm')]"
+                    " | //a[contains(@href, 'join') and contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'join group')]"
                 )
                 join_btn = local_wait.until(
                     EC.presence_of_element_located((By.XPATH, join_btn_xpath_full))
@@ -89,7 +110,14 @@ def join_single_group(driver, wait, uid, group_id):
                 time.sleep(1.5)
 
                 # Re-find để tránh stale element sau scroll
-                join_btn = driver.find_element(By.XPATH, _JOIN_BTN_XPATH)
+                join_btn = driver.find_element(By.XPATH, join_btn_xpath_full)
+                tag = join_btn.tag_name
+                role = join_btn.get_attribute('role')
+                if not (tag == 'div' and role == 'button'):
+                    try:
+                        join_btn = join_btn.find_element(By.XPATH, "ancestor::div[@role='button'][1]")
+                    except Exception:
+                        pass
 
                 # JS click (bypass overlay div vô hình)
                 try:

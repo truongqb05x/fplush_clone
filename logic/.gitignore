@@ -1,0 +1,28 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+venv/
+.env/
+
+# Chrome Profiles
+profiles/
+
+# Build artifacts (C# & General)
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+
+# Local resources & sensitive data
+*.txt
+!requirements.txt
+resources/*.json
+resources/*.exe
+
+# Log files
+*.log
