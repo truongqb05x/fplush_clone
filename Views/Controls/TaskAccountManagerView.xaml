@@ -35,10 +35,9 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="UID" Binding="{Binding Account.Uid}" Width="100" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Tên" Binding="{Binding Account.Name}" Width="120" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Trạng thái" Binding="{Binding Status}" Width="100" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Tiến độ" Binding="{Binding Progress}" Width="80" IsReadOnly="True"/>
+                <DataGridTextColumn Header="UID" Binding="{Binding Account.Uid}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Trạng thái" Binding="{Binding Status}" Width="1.5*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Tiến độ" Binding="{Binding Progress}" Width="0.8*" IsReadOnly="True"/>
 
                 <DataGridTemplateColumn Header="Thao tác" Width="70">
                     <DataGridTemplateColumn.CellTemplate>

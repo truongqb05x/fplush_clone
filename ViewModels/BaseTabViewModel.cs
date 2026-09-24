@@ -34,6 +34,8 @@ namespace FPlusClone.ViewModels
             set { if (_actionBeforePost != value) { _actionBeforePost = value; OnPropertyChanged(); } }
         }
 
+        public ActionConfig ConfigBeforePost { get; set; } = new ActionConfig();
+
         private bool _actionAfterPost;
         public bool ActionAfterPost
         {
@@ -41,13 +43,17 @@ namespace FPlusClone.ViewModels
             set { if (_actionAfterPost != value) { _actionAfterPost = value; OnPropertyChanged(); } }
         }
 
+        public ActionConfig ConfigAfterPost { get; set; } = new ActionConfig();
+
         public ICommand OpenSelectAccountCommand { get; }
         public ICommand RemoveAccountCommand { get; }
         public ICommand SelectAllCommand { get; }
+        public ICommand OpenActionConfigCommand { get; }
 
         public BaseTabViewModel()
         {
             OpenSelectAccountCommand = new RelayCommand(_ => OpenSelectAccountModal());
+            OpenActionConfigCommand = new RelayCommand(obj => OpenActionConfigModal(obj as string));
             RemoveAccountCommand = new RelayCommand(obj =>
             {
                 if (obj is TaskAccount acc)
@@ -68,8 +74,41 @@ namespace FPlusClone.ViewModels
 
         private void OpenSelectAccountModal()
         {
-            // Will implement later
-            MessageBox.Show("Modal Chọn Tài Khoản - Sẽ mở SelectAccountWindow");
+            var mainWindow = Application.Current.MainWindow;
+            var mainViewModel = mainWindow?.DataContext as MainViewModel;
+            if (mainViewModel == null) return;
+
+            var window = new Views.SelectAccountWindow(mainViewModel.Accounts)
+            {
+                Owner = mainWindow
+            };
+
+            if (window.ShowDialog() == true)
+            {
+                foreach (var acc in window.SelectedAccountsResult)
+                {
+                    // Check if already exists
+                    if (!TaskAccounts.Any(a => a.Account.Uid == acc.Uid))
+                    {
+                        TaskAccounts.Add(new TaskAccount { Account = acc });
+                    }
+                }
+            }
+        }
+
+        private void OpenActionConfigModal(string type)
+        {
+            var config = type == "Before" ? ConfigBeforePost : ConfigAfterPost;
+            var window = new Views.ActionConfigWindow(config)
+            {
+                Owner = Application.Current.MainWindow
+            };
+
+            if (window.ShowDialog() == true)
+            {
+                if (type == "Before") ConfigBeforePost = window.Config;
+                else ConfigAfterPost = window.Config;
+            }
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

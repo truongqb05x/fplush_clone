@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET9_0;NETCOREAPP;WINDOWS;WINDOWS7_0;NET5_0_OR_GREATER;NET6_0_OR_GREATER;NET7_0_OR_GREATER;NET8_0_OR_GREATER;NET9_0_OR_GREATER;NETCOREAPP3_0_OR_GREATER;NETCOREAPP3_1_OR_GREATER;WINDOWS7_0_OR_GREATER
 D:\facebook\Tools\main\App.xaml
-14-948329148
+18-532129060
 
-29448892706
+38225013221
 2001466749558
-Resources\Styles.xaml;Views\CopyCustomWindow.xaml;Views\DangerConfirmDialog.xaml;Views\EditValueWindow.xaml;Views\ImportAccountWindow.xaml;Views\MainWindow.xaml;Views\SelectFolderWindow.xaml;Views\SettingsWindow.xaml;Views\Tabs\TabJoinGroupView.xaml;Views\Tabs\TabNuoiTKView.xaml;Views\Tabs\TabOutGroupView.xaml;Views\Tabs\TabSpamGroupView.xaml;Views\Tabs\TabSpamKeywordView.xaml;Views\Tabs\TabSpamPageView.xaml;
+Resources\Styles.xaml;Views\ActionConfigWindow.xaml;Views\Controls\TaskAccountManagerView.xaml;Views\CopyCustomWindow.xaml;Views\DangerConfirmDialog.xaml;Views\EditCommentWindow.xaml;Views\EditValueWindow.xaml;Views\ImportAccountWindow.xaml;Views\MainWindow.xaml;Views\SelectAccountWindow.xaml;Views\SelectFolderWindow.xaml;Views\SettingsWindow.xaml;Views\Tabs\TabJoinGroupView.xaml;Views\Tabs\TabNuoiTKView.xaml;Views\Tabs\TabOutGroupView.xaml;Views\Tabs\TabSpamGroupView.xaml;Views\Tabs\TabSpamKeywordView.xaml;Views\Tabs\TabSpamPageView.xaml;
 
 False
 

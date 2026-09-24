@@ -1,0 +1,50 @@
+<Window x:Class="FPlusClone.Views.SelectAccountWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Chọn Tài Khoản" Height="500" Width="600" WindowStartupLocation="CenterOwner" Background="#f0f0f0">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Chọn các tài khoản muốn sử dụng cho tiến trình này:" FontWeight="Bold" Margin="0,0,0,10" Foreground="#333"/>
+        
+        <DockPanel Grid.Row="1" Margin="0,0,0,10">
+            <TextBlock Text="Thư mục:" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#555" FontWeight="SemiBold"/>
+            <ComboBox ItemsSource="{Binding Folders}" SelectedItem="{Binding SelectedFolder}" Height="30" Width="150" HorizontalAlignment="Left" Background="#f8f9fa" BorderBrush="#dadce0" Padding="5,0" Margin="0,0,15,0"/>
+            <TextBlock Text="Tìm UID:" VerticalAlignment="Center" Margin="0,0,10,0" Foreground="#555" FontWeight="SemiBold"/>
+            <TextBox Text="{Binding SearchUid, UpdateSourceTrigger=PropertyChanged}" Height="30" Width="150" Padding="5,0,0,0" VerticalContentAlignment="Center" Background="#fff" BorderBrush="#dadce0"/>
+            <Button Content="Chọn tất cả (Tự động xác nhận)" Command="{Binding SelectAllCommand}" DockPanel.Dock="Right" HorizontalAlignment="Right" Background="#f8f9fa" BorderBrush="#ccc" Padding="10,5" Cursor="Hand" FontWeight="Bold" Foreground="#1a73e8"/>
+        </DockPanel>
+
+        <DataGrid x:Name="accountGrid" Grid.Row="2" ItemsSource="{Binding ItemsView}" AutoGenerateColumns="False" 
+                  CanUserAddRows="False" Background="White" BorderBrush="#ccc" BorderThickness="1" 
+                  RowBackground="White" AlternatingRowBackground="#f8f9fa" SelectionMode="Extended">
+            <DataGrid.Columns>
+                <DataGridTemplateColumn Width="40">
+                    <DataGridTemplateColumn.HeaderTemplate>
+                        <DataTemplate>
+                            <CheckBox Command="{Binding DataContext.SelectAllCommand, RelativeSource={RelativeSource AncestorType=Window}}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.HeaderTemplate>
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <CheckBox IsChecked="{Binding IsSelected, UpdateSourceTrigger=PropertyChanged}" HorizontalAlignment="Center"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
+
+                <DataGridTextColumn Header="UID" Binding="{Binding Uid}" Width="150" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Tên" Binding="{Binding Name}" Width="*" IsReadOnly="True"/>
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,10,0,0">
+            <Button Content="Hủy" Width="80" Height="30" Margin="0,0,10,0" Background="#fff" BorderBrush="#ccc" BorderThickness="1" Cursor="Hand" Click="Cancel_Click"/>
+            <Button Content="Xác nhận" Width="100" Height="30" Background="#1a73e8" Foreground="White" BorderThickness="0" FontWeight="Bold" Cursor="Hand" Click="Confirm_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
