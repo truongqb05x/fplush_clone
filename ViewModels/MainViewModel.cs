@@ -74,7 +74,7 @@ namespace FPlusClone.ViewModels
 
         // ChromeTabs: các tab con thuộc Chrome Manager
         public ObservableCollection<TabViewModel> ChromeTabs { get; set; }
-        public ObservableCollection<AppFunction> AvailableFunctions { get; set; }
+
         public ObservableCollection<string> Folders { get; set; }
         public ObservableCollection<string> Statuses { get; set; }
 
@@ -125,11 +125,6 @@ namespace FPlusClone.ViewModels
         public bool IsDebugConsoleVisible { get => _isDebugConsoleVisible; set => SetProperty(ref _isDebugConsoleVisible, value); }
         public ObservableCollection<string> DebugLogs { get; set; }
 
-        private bool _showAddTabModal;
-        public bool ShowAddTabModal { get => _showAddTabModal; set => SetProperty(ref _showAddTabModal, value); }
-
-        private AppFunction _selectedFunction;
-        public AppFunction SelectedFunction { get => _selectedFunction; set => SetProperty(ref _selectedFunction, value); }
 
         private string _selectedFolder = "All Folder";
         public string SelectedFolder { get => _selectedFolder; set { if (SetProperty(ref _selectedFolder, value)) ItemsView?.Refresh(); } }
@@ -158,9 +153,7 @@ namespace FPlusClone.ViewModels
         private string _progressMessage = "Đang xử lý...";
         public string ProgressMessage { get => _progressMessage; set => SetProperty(ref _progressMessage, value); }
 
-        public ICommand ToggleModalCommand { get; }
-        public ICommand AddTabCommand { get; }
-        public ICommand CloseTabCommand { get; }
+
         public ICommand SelectTabCommand { get; }
         public ICommand SearchCommand { get; }
         public ICommand SelectAllCommand { get; }
@@ -191,16 +184,16 @@ namespace FPlusClone.ViewModels
             ItemsView.Filter = FilterAccounts;
 
             Folders = new ObservableCollection<string>();
-            // ChromeTabs: chỉ hiển thị khi Chrome Manager được chọn
-            ChromeTabs = new ObservableCollection<TabViewModel> { new TabViewModel { Header = "Quản lí tài khoản Fb" } };
-            AvailableFunctions = new ObservableCollection<AppFunction>
+            // Khởi tạo sẵn tất cả các tab chức năng để hiển thị
+            ChromeTabs = new ObservableCollection<TabViewModel>
             {
-                new AppFunction { Name = "Comment like group",  Description = "Tự động comment hàng loạt vào các Group Facebook theo danh sách." },
-                new AppFunction { Name = "Tham gia nhóm",       Description = "Tìm kiếm và tham gia nhóm theo danh sách ID/link." },
-                new AppFunction { Name = "Rời nhóm",            Description = "Tự động rời thoát khỏi các Group Facebook." },
-                new AppFunction { Name = "Nuôi tài khoản",      Description = "Scroll News Feed, tương tác tự nhiên để warm-up tài khoản." },
-                new AppFunction { Name = "Spam Keyword",        Description = "Tìm bài viết theo từ khóa và tự động comment hàng loạt." },
-                new AppFunction { Name = "Comment Page",        Description = "Tự động comment vào bài viết của các Fanpage theo ID." },
+                new TabViewModel { Header = "Quản lí tài khoản Fb" },
+                new TabViewModel { Header = "Comment like group" },
+                new TabViewModel { Header = "Tham gia nhóm" },
+                new TabViewModel { Header = "Rời nhóm" },
+                new TabViewModel { Header = "Nuôi tài khoản" },
+                new TabViewModel { Header = "Spam Keyword" },
+                new TabViewModel { Header = "Comment Page" }
             };
 
             Statuses = new ObservableCollection<string> { "All Status", "Live", "Confirm Email", "Checkpoint" };
@@ -211,7 +204,7 @@ namespace FPlusClone.ViewModels
                 $"[{DateTime.Now:HH:mm:ss}] User interface initialized."
             };
 
-            ToggleModalCommand = new RelayCommand(_ => ShowAddTabModal = !ShowAddTabModal);
+
 
             ShowSettingsCommand = new RelayCommand(_ =>
             {
@@ -250,33 +243,6 @@ namespace FPlusClone.ViewModels
                     IsHomeSelected = false;
                     IsTokenSelected = false;
                     OnPropertyChanged(nameof(IsAccountTabSelected));
-                }
-            });
-            AddTabCommand = new RelayCommand(param =>
-            {
-                if (param is AppFunction func)
-                {
-                    SelectedFunction = func;
-                }
-
-                if (SelectedFunction != null && !string.IsNullOrEmpty(SelectedFunction.Name))
-                {
-                    if (!ChromeTabs.Any(t => t.Header == SelectedFunction.Name))
-                    {
-                        var newTab = new TabViewModel { Header = SelectedFunction.Name };
-                        ChromeTabs.Add(newTab);
-                        SelectedTab = newTab;
-                        IsChromeSelected = true;
-                        Log($"System: Added new Chrome tab '{SelectedFunction.Name}'.");
-                    }
-                    else
-                    {
-                        SelectedTab = ChromeTabs.First(t => t.Header == SelectedFunction.Name);
-                        IsChromeSelected = true;
-                    }
-                    ShowAddTabModal = false;
-                    ShowAddTabModal = false;
-                    SelectedFunction = new AppFunction { Name = "", Description = "" };
                 }
             });
 
@@ -474,15 +440,6 @@ namespace FPlusClone.ViewModels
 
             BulkEditCommand = new RelayCommand(param => BulkEdit(param));
 
-            CloseTabCommand = new RelayCommand(obj =>
-            {
-                if (obj is TabViewModel tabToRemove && tabToRemove.Header != "Quản lí tài khoản Fb")
-                {
-                    ChromeTabs.Remove(tabToRemove);
-                    Log($"System: Tab '{tabToRemove.Header}' closed.");
-                    if (SelectedTab == tabToRemove && ChromeTabs.Count > 0) SelectedTab = ChromeTabs[0];
-                }
-            });
 
             ShowImportAccountCommand = new RelayCommand(_ =>
             {
