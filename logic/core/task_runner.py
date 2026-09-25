@@ -109,7 +109,7 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                         acc_index = 0
                     proxy_str = proxy_list[acc_index % len(proxy_list)]
                     proxy_config = parse_proxy_str(proxy_str)
-                    print(f"[{uid}]  [Settings] Sử dụng proxy tĩnh từ cài đặt: {proxy_str}")
+                    # print(f"[{uid}]  [Settings] Sử dụng proxy tĩnh từ cài đặt: {proxy_str}")
             elif proxy_method == 2:  # KiotProxy
                 kiot_key = task_config.get("KiotProxyKey", "")
                 if kiot_key:
@@ -118,7 +118,7 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                         cached = KIOT_PROXY_CACHE.get(kiot_key)
                         if cached and cached.get("cycle") == cycle_count:
                             kiot_proxy_str = cached.get("proxy")
-                            print(f"[{uid}]  [Settings] Dùng proxy Kiot cache: {kiot_key[:10]}...")
+                            # print(f"[{uid}]  [Settings] Dùng proxy Kiot cache: {kiot_key[:10]}...")
                         else:
                             kiot_proxy_str = get_new_kiot_proxy(kiot_key)
                             if kiot_proxy_str:
@@ -126,12 +126,12 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                     if kiot_proxy_str:
                         proxy_config = parse_kiot_proxy_string(kiot_proxy_str)
                         proxy_str = kiot_proxy_str
-                        print(f"[{uid}]  [Settings] Sử dụng KiotProxy từ cài đặt: {kiot_proxy_str[:30]}...")
+                        # print(f"[{uid}]  [Settings] Sử dụng KiotProxy từ cài đặt: {kiot_proxy_str[:30]}...")
             else:  # proxy_method == 0 hoặc không xác định → không dùng proxy
                 proxy_config = None
                 proxy_str = None
                 proxy_field = ""  # Đặt proxy_field rỗng để bỏ qua fallback phía dưới
-                print(f"[{uid}]  [Settings] Không sử dụng proxy (Direct connection).")
+                # print(f"[{uid}]  [Settings] Không sử dụng proxy (Direct connection).")
         
         # Chỉ xử lý proxy theo cách cũ nếu chưa được gán từ Settings UI
         if not (execution_mode == 1 and task_config and task_config.get("ProxyMethod", 0) in (0, 1, 2)):
@@ -192,18 +192,19 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                 proxy_str = get_assigned_proxy(uid, all_proxies, mapping_proxy)
                 proxy_config = parse_proxy_str(proxy_str)
         
-        print(f"[{uid}]  Khởi động luồng (Proxy: {proxy_str if proxy_str else 'Direct'})")
+        _proxy_display = ":".join((proxy_str or "Direct").split(":")[:2])
+        print(f"[{uid}] {_proxy_display}")
         
         for login_attempt in range(2):
             profile_path = get_profile_path(uid)
-            print(f"[{uid}]  Profile Path: {profile_path}")
+            # print(f"[{uid}]  Profile Path: {profile_path}")
             if os.path.exists(profile_path):
                 if execution_mode == 2:
                     print(f"[{uid}]  Bỏ qua vì Profile đã tồn tại (Chế độ 2).")
                     return "SKIPPED"
-                print(f"[{uid}]  Profile đã tồn tại.")
+                # print(f"[{uid}]  Profile đã tồn tại.")
             else:
-                print(f"[{uid}]  Profile chưa tồn tại, đang tạo mới.")
+                pass # print(f"[{uid}]  Profile chưa tồn tại, đang tạo mới.")
             
             driver, wait, _ = create_driver(
                 user_data_dir=profile_path, 
@@ -214,7 +215,7 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
             
             # --- SMART LOGIN LOGIC ---
             driver.get("https://www.facebook.com/")
-            print(f"[{uid}]  Đang kiểm tra trạng thái login tại: {driver.current_url}")
+            # print(f"[{uid}]  Đang kiểm tra trạng thái login tại: {driver.current_url}")
             time.sleep(5) # Chờ redirect
             
             current_cookies = driver.get_cookies()
@@ -248,9 +249,9 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
             if is_logged_in:
                 print(f"[{uid}]  Session cũ trong Profile vẫn còn hiệu lực. Bỏ qua nạp cookie.")
             else:
-                print(f"[{uid}]  Session hết hạn/chưa có (hoặc sai UA). Tiến hành nạp cookie mới...")
+                # print(f"[{uid}]  Session hết hạn/chưa có (hoặc sai UA). Tiến hành nạp cookie mới...")
                 # driver.delete_all_cookies() # Đã ẩn để tránh clear profile vô ích
-                print(f"[{uid}]  Đang nạp {len(actual_cookies)} cookie từ file account (Sẽ thêm Expiry 1 năm)...")
+                # print(f"[{uid}]  Đang nạp {len(actual_cookies)} cookie từ file account (Sẽ thêm Expiry 1 năm)...")
                 
                 # Tính toán expiry: 1 năm kể từ hiện tại
                 expiry_time = int(time.time()) + (365 * 24 * 3600)
@@ -262,9 +263,6 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                         cookie_dict["expiry"] = expiry_time # Ép persistent
                         driver.add_cookie(cookie_dict)
                     except Exception as e_cook:
-                        # In lỗi nếu nạp thất bại (trừ các cookie rác)
-                        if cookie_dict.get('name') in ['c_user', 'xs', 'fr', 'datr']:
-                            print(f"[{uid}]  Lỗi nạp cookie quan trọng ({cookie_dict.get('name')}): {e_cook}")
                         pass
                 driver.refresh()
                 time.sleep(8)
@@ -285,6 +283,7 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                         print(f"[{uid}]  Đã vượt CHECKPOINT TẠM THỜI thành công, tiếp tục chạy.")
                 else:
                     print(f"[{uid}]  PHÁT HIỆN CHECKPOINT CỨNG -> Xóa tài khoản.")
+                    print(f"[{uid}] UI_STATUS|Die")
                     is_dead = True
                     return False
     
@@ -323,6 +322,17 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                         print(f"[{uid}]  Login và xác minh UID thành công.")
                         try:
                             new_cookies = driver.get_cookies()
+                            
+                            # Ép cookie thành persistent để profile lưu lại sau khi tắt Chrome
+                            expiry_time = int(time.time()) + (365 * 24 * 3600)
+                            for c in new_cookies:
+                                try:
+                                    c_copy = c.copy()
+                                    c_copy['expiry'] = expiry_time
+                                    driver.add_cookie(c_copy)
+                                except:
+                                    pass
+                                    
                             cookie_pairs = [f"{c['name']}={c['value']}" for c in new_cookies]
                             new_cookie_str = "; ".join(cookie_pairs)
                             
@@ -370,6 +380,7 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                             print(f"[{uid}]  Lỗi khi xóa profile: {e_del}")
                         if login_attempt == 0: continue
                         print(f"[{uid}]  Đã thử lại nhưng vẫn thất bại. Đang xóa tài khoản...")
+                        print(f"[{uid}] UI_STATUS|Die")
                         is_dead = True
                         if execution_mode != 6: return False
                 else:
@@ -385,6 +396,7 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                         print(f"[{uid}]  Lỗi khi xóa profile: {e_del}")
                     if login_attempt == 0: continue
                     print(f"[{uid}]  Đã thử lại nhưng vẫn thất bại. Đang xóa tài khoản...")
+                    print(f"[{uid}] UI_STATUS|Die")
                     is_dead = True
                     if execution_mode != 6: return False
             
@@ -400,6 +412,7 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
         else:
             return res
 
+    except Exception as e:
         print(f" Thread Error for {cookie_line[:20]}...: {e}")
         return False
     finally:
@@ -412,5 +425,3 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
             
         if is_dead:
             remove_dead_account(cookie_line)
-
-# ================= MAIN ENTRY =================

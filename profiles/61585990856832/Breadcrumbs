@@ -1,0 +1,31 @@
+0:00:13 Tab1 AddInfobar73
+0:00:13 Tab1 FinishNav10
+0:00:13 Tab1 SecurityChange #broken
+0:00:15 Tab1 StartNav11 #renderer-script #auto_subframe
+0:00:15 Tab1 FinishNav11
+0:00:18 Tab1 PageLoad
+0:00:18 Tab1 StartNav12 #renderer-script #link
+0:00:18 Tab1 SecurityChange #broken
+0:00:18 Tab1 FinishNav12
+0:00:18 Tab1 StartNav13 #renderer-script #auto_subframe
+0:00:19 Tab1 FinishNav13
+0:00:19 Tab1 PageLoad
+0:00:20 Tab1 StartNav14 #renderer-user #link
+0:00:20 Tab1 SecurityChange #broken
+0:00:20 Tab1 FinishNav14
+0:00:24 Tab1 StartNav15 #renderer-user #link
+0:00:26 Tab1 SecurityChange #broken
+0:00:26 Tab1 RemoveInfobar73
+0:00:26 Tab1 AddInfobar73
+0:00:26 Tab1 FinishNav15
+0:00:26 Tab1 SecurityChange #broken
+0:00:28 Tab1 StartNav16 #renderer-script #auto_subframe
+0:00:28 Tab1 FinishNav16
+0:00:31 Tab1 StartNav17 #renderer-script #link
+0:00:31 Tab1 SecurityChange #broken
+0:00:31 Tab1 FinishNav17
+0:00:32 Tab1 StartNav18 #renderer-script #auto_subframe
+0:00:33 Tab1 FinishNav18
+0:00:33 Tab1 PageLoad
+0:00:35 Tab1 PageLoad
+0:00:41 Widget Closed: StatusBubble

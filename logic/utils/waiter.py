@@ -29,7 +29,7 @@ def wait_for_element_with_retry(driver, by, value, timeout=30, retry=2, descript
     """Chờ element xuất hiện với retry"""
     for attempt in range(retry + 1):
         try:
-            print(f"⏳ Chờ element {description} (lần {attempt + 1}/{retry + 1})...")
+            # print(f"⏳ Chờ element {description} (lần {attempt + 1}/{retry + 1})...")
             wait = WebDriverWait(driver, timeout)
             element = wait.until(EC.presence_of_element_located((by, value)))
             
@@ -43,7 +43,7 @@ def wait_for_element_with_retry(driver, by, value, timeout=30, retry=2, descript
                 raise e
             
             if attempt < retry:
-                print(f"⚠️ Chưa thấy {description}, đang dừng các request treo và reload...")
+                # print(f"⚠️ Chưa thấy {description}, đang dừng các request treo và reload...")
                 try:
                     driver.execute_script("window.stop();") # Dừng các request đang treo trước khi refresh
                 except:
@@ -58,10 +58,10 @@ def wait_for_clickable_with_retry(driver, by, value, timeout=30, retry=2, descri
     """Chờ element clickable với retry"""
     for attempt in range(retry + 1):
         try:
-            print(f"⏳ Chờ element clickable {description} (lần {attempt + 1}/{retry + 1})...")
+            # print(f"⏳ Chờ element clickable {description} (lần {attempt + 1}/{retry + 1})...")
             wait = WebDriverWait(driver, timeout)
             element = wait.until(EC.element_to_be_clickable((by, value)))
-            print(f"✅ Element {description} đã clickable")
+            # print(f"✅ Element {description} đã clickable")
             return element
         except Exception as e:
             # ===== HTTPConnectionPool TIMEOUT → OUT NGAY =====
@@ -71,9 +71,9 @@ def wait_for_clickable_with_retry(driver, by, value, timeout=30, retry=2, descri
             
             if isinstance(e, TimeoutException):
                 if attempt < retry:
-                    print(f"⚠️ Timeout clickable lần {attempt + 1}, thử lại...")
+                    pass # print(f"⚠️ Timeout clickable lần {attempt + 1}, thử lại...")
                 else:
-                    print(f"❌ Element {description} không clickable sau {retry + 1} lần thử")
+                    # print(f"❌ Element {description} không clickable sau {retry + 1} lần thử")
                     raise
             else:
                 raise e

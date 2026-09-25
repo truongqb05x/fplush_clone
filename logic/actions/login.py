@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import time
 import random
 from selenium.webdriver.common.by import By
@@ -11,8 +11,6 @@ def login_with_credentials(driver, username, password):
     Dựa trên HTML được cung cấp bởi user
     """
     try:
-        print(f"🔑 Đang tiến hành login cho: {username}")
-        
         # 1. Kiểm tra nếu có nút "Dùng trang cá nhân khác" thì nhấn trước
         switch_selectors = [
             (By.XPATH, "//div[@aria-label='Dùng trang cá nhân khác' or @aria-label='Use another profile']"),
@@ -24,7 +22,6 @@ def login_with_credentials(driver, username, password):
             try:
                 switch_btn = driver.find_element(by, val)
                 if switch_btn and switch_btn.is_displayed(): 
-                    print(f"[{username}] 🖱️ Đã tìm thấy nút chuyển tài khoản, đang click trước...")
                     driver.execute_script("arguments[0].click();", switch_btn)
                     time.sleep(3)
                     break
@@ -34,7 +31,7 @@ def login_with_credentials(driver, username, password):
         email_input = wait_for_element_with_retry(driver, By.NAME, "email", timeout=15, description="Email input")
         
         if not email_input:
-            print("❌ Không tìm thấy input Email")
+            print(f"[{username}] ❌ Login thất bại.")
             return False
         
         # Nhập email
@@ -46,7 +43,7 @@ def login_with_credentials(driver, username, password):
         # 2. Chờ input password
         pass_input = wait_for_element_with_retry(driver, By.NAME, "pass", timeout=15, description="Password input")
         if not pass_input:
-            print("❌ Không tìm thấy input Password")
+            print(f"[{username}] ❌ Login thất bại.")
             return False
         
         # Nhập password
@@ -69,7 +66,6 @@ def login_with_credentials(driver, username, password):
         login_btn = None
         for by, val in login_btn_selectors:
             try:
-                print(f"🔍 Thử tìm nút login bằng {by}: {val}")
                 login_btn = wait_for_clickable_with_retry(driver, by, val, timeout=5, retry=0, description=f"Login button ({val})")
                 if login_btn:
                     break
@@ -77,17 +73,12 @@ def login_with_credentials(driver, username, password):
                 continue
         
         if login_btn:
-            print("🖱️ Đang click nút Đăng nhập...")
             try:
                 login_btn.click()
             except:
-                print("⚠️ Click thông thường lỗi, thử click bằng JavaScript...")
                 driver.execute_script("arguments[0].click();", login_btn)
         else:
-            print("⚠️ Không tìm thấy nút Đăng nhập cụ thể, thử phím ENTER trên ô password")
             pass_input.send_keys(Keys.ENTER)
-        
-        print("⏳ Đang chờ chuyển hướng sau khi click Đăng nhập (tối đa 30 giây)...")
 
         # Polling mỗi 1 giây, tối đa 30 giây.
         # Facebook hay đi qua nhiều bước trung gian:
@@ -99,6 +90,7 @@ def login_with_credentials(driver, username, password):
         elapsed = 0
         success = False
 
+        from utils.helpers import is_checkpoint as check_checkpoint
         while elapsed < max_wait:
             time.sleep(poll_interval)
             elapsed += poll_interval
@@ -106,40 +98,35 @@ def login_with_credentials(driver, username, password):
 
             is_login     = "login"      in url
             is_two_step  = "two_step"   in url or "two_factor" in url
-            is_checkpoint= "checkpoint" in url
+            is_checkpoint = check_checkpoint(driver)
 
             if is_checkpoint:
                 # Checkpoint cứng — không tự giải quyết được, thoát sớm
-                print(f"⚠️ [{elapsed}s] Gặp checkpoint: {driver.current_url}")
                 break
 
             if not is_login and not is_two_step and not is_checkpoint:
                 # URL sạch — đã qua hết bước trung gian
                 success = True
-                print(f"✅ [{elapsed}s] Login thành công. URL: {driver.current_url}")
+                print(f"[{username}] ✅ Login thành công.")
                 break
-
-            # Vẫn đang ở trang trung gian (login / two_step) → tiếp tục chờ
-            print(f"   [{elapsed}s] Chờ... URL: {driver.current_url}")
 
         if success:
             return True
 
         # Hết 30s hoặc gặp checkpoint → xử lý
         current_url = driver.current_url
-        if "checkpoint" in current_url.lower():
+        if check_checkpoint(driver):
             from utils.helpers import is_soft_checkpoint
             if is_soft_checkpoint(driver):
-                print("Đã xử lý CHECKPOINT TẠM THỜI (Dismiss). Đang load lại trang...")
                 driver.get("https://www.facebook.com/")
                 time.sleep(5)
-                if "checkpoint" not in driver.current_url.lower():
-                    print("✅ Login thành công sau khi vượt checkpoint tạm thời.")
+                if not check_checkpoint(driver):
+                    print(f"[{username}] ✅ Login thành công.")
                     return True
 
-        print(f"⚠️ Login thất bại sau {elapsed}s. URL cuối: {current_url}")
+        print(f"[{username}] ❌ Login thất bại.")
         return False
 
     except Exception as e:
-        print(f"❌ Lỗi trong quá trình login: {e}")
+        print(f"[{username}] ❌ Login thất bại.")
         return False

@@ -72,7 +72,16 @@ SOFT_CHECKPOINT_IDS = {
 
 def is_checkpoint(driver):
     """Kiểm tra xem hiện tại có ở trang checkpoint không"""
-    return "checkpoint" in normalize_url(safe_url(driver))
+    url = normalize_url(safe_url(driver))
+    if "checkpoint" in url or "suspended" in url:
+        return True
+    try:
+        src = driver.page_source.lower()
+        if "we suspended your account" in src or "chúng tôi đã đình chỉ tài khoản" in src or "vô hiệu hóa" in src or "bị đình chỉ" in src or "your account has been disabled" in src:
+            return True
+    except:
+        pass
+    return False
 
 
 def is_soft_checkpoint(driver):

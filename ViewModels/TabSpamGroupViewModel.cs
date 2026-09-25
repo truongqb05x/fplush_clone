@@ -14,6 +14,13 @@ namespace FPlusClone.ViewModels
             set { if (_groupUids != value) { _groupUids = value; SaveGroupUids(); OnPropertyChanged(); } }
         }
 
+        private string _imageGroupUids;
+        public string ImageGroupUids
+        {
+            get => _imageGroupUids;
+            set { if (_imageGroupUids != value) { _imageGroupUids = value; SaveImageGroupUids(); OnPropertyChanged(); } }
+        }
+
         private bool _isSequentialComment = true;
         public bool IsSequentialComment
         {
@@ -139,11 +146,13 @@ namespace FPlusClone.ViewModels
 
         private readonly string commentsFilePath = "comments_spamgroup.txt";
         private readonly string groupUidsFilePath = "group_uids_spamgroup.txt";
+        private readonly string imageGroupUidsFilePath = "image_group_uids_spamgroup.txt";
 
         public TabSpamGroupViewModel()
         {
             LoadComments();
             LoadGroupUids();
+            LoadImageGroupUids();
 
             SelectImageFolderCommand = new RelayCommand(_ =>
             {
@@ -247,6 +256,23 @@ namespace FPlusClone.ViewModels
             }
         }
 
+        private void LoadImageGroupUids()
+        {
+            if (System.IO.File.Exists(imageGroupUidsFilePath))
+            {
+                _imageGroupUids = System.IO.File.ReadAllText(imageGroupUidsFilePath);
+                OnPropertyChanged(nameof(ImageGroupUids));
+            }
+        }
+
+        private void SaveImageGroupUids()
+        {
+            if (_imageGroupUids != null)
+            {
+                System.IO.File.WriteAllText(imageGroupUidsFilePath, _imageGroupUids);
+            }
+        }
+
         private bool _isRunning;
         public bool IsRunning
         {
@@ -293,6 +319,7 @@ namespace FPlusClone.ViewModels
             {
                 MaxThreads = MaxThreads, // <-- Thêm số luồng
                 GroupUids = GroupUids?.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries).ToList() ?? new System.Collections.Generic.List<string>(),
+                ImageGroupUids = ImageGroupUids?.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries).ToList() ?? new System.Collections.Generic.List<string>(),
                 IsTextComment = IsTextComment,
                 IsImageComment = IsImageComment,
                 ImageFolderPath = ImageFolderPath,
@@ -352,8 +379,11 @@ namespace FPlusClone.ViewModels
                     UseShellExecute = false,
                     CreateNoWindow = true,
                     RedirectStandardOutput = true,
-                    RedirectStandardError = true
+                    RedirectStandardError = true,
+                    StandardOutputEncoding = System.Text.Encoding.UTF8,
+                    StandardErrorEncoding = System.Text.Encoding.UTF8
                 };
+                _runningProcess.StartInfo.EnvironmentVariables["PYTHONIOENCODING"] = "utf-8";
                 
                 _runningProcess.EnableRaisingEvents = true;
                 
@@ -365,6 +395,18 @@ namespace FPlusClone.ViewModels
                         System.Windows.Application.Current.Dispatcher.Invoke(() => 
                         {
                             LogText += e.Data + "\n";
+                            
+                            // Check for UI_STATUS|Die
+                            var match = System.Text.RegularExpressions.Regex.Match(e.Data, @"\[(.*?)\]\s*UI_STATUS\|Die");
+                            if (match.Success)
+                            {
+                                string uidStr = match.Groups[1].Value.Trim();
+                                var acc = TaskAccounts.FirstOrDefault(a => a.Account.Uid == uidStr);
+                                if (acc != null)
+                                {
+                                    acc.Status = "Die";
+                                }
+                            }
                         });
                     }
                 };

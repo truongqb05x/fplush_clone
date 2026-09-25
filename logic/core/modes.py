@@ -90,26 +90,26 @@ def run_cli():
                     max_threads = cfg.get("MaxThreads", 3)
                     max_limit = cfg.get("MaxCommentsPerAcc", 5)
                     is_edit_comment = cfg.get("IsEditComment", "yes")
-                    print(f" Loaded config: {max_threads} threads, {max_limit} limit, Edit: {is_edit_comment}.")
+                    # print(f" Loaded config: {max_threads} threads, {max_limit} limit, Edit: {is_edit_comment}.")
             except Exception as e:
                 print(f" Lỗi khi đọc file config.json: {e}")
         else:
-            print(" No config file found, using default settings.")
+            pass # print(" No config file found, using default settings.")
 
         MAX_THREADS = max_threads 
         
-        print("\n" + "="*50)
-        print("          FB TOOLS - CHỌN CHẾ ĐỘ CHẠY")
-        print("="*50)
-        print("1. Spam Comment Groups")
-        print("3. Nuôi Tài Khoản")
-        print("4. Spam Comment Keyword")
-        print("5. Join Groups theo danh sách")
-        print("7. Rời nhóm")
-        print("8. Comment ID Page")
-        print("9. Comment bài viết (TTC)")
-        print("10. Upload Avatar")
-        print("="*50)
+        # print("\n" + "="*50)
+        # print("          FB TOOLS - CHỌN CHẾ ĐỘ CHẠY")
+        # print("="*50)
+        # print("1. Spam Comment Groups")
+        # print("3. Nuôi Tài Khoản")
+        # print("4. Spam Comment Keyword")
+        # print("5. Join Groups theo danh sách")
+        # print("7. Rời nhóm")
+        # print("8. Comment ID Page")
+        # print("9. Comment bài viết (TTC)")
+        # print("10. Upload Avatar")
+        # print("="*50)
         
         if len(sys.argv) > 1:
             print(f"👉 Chế độ được truyền qua đối số: {choice}")

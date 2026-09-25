@@ -113,25 +113,72 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
     try:
         # Xử lý nếu group_id đã là full URL (ví dụ https://www.facebook.com/groups/xxxx/)
         if group_id.startswith("http"):
-            # Chuẩn hóa URL để lấy link gốc của group (loại bỏ các sub-path như /posts/, /permalink/...)
+            # Chuẩn hóa URL để lấy link gốc của group
             m = re.match(r"(https?://(?:www\.|m\.)?facebook\.com/groups/[^/]+)/?", group_id)
             if m:
                 base_url = m.group(1).rstrip("/") + "/"
             else:
                 base_url = group_id.split("?")[0].rstrip("/") + "/"
+            g_id = base_url.rstrip("/").split("/")[-1]
         else:
             base_url = f"https://www.facebook.com/groups/{group_id}/"
+            g_id = group_id
 
         target_url = f"{base_url}?sorting_setting=CHRONOLOGICAL"
 
-        print(f"[{uid}]  Truy cập group (DOM Click): {target_url}...")
-        script = f"""
+        # Truy cập danh sách nhóm đã tham gia
+        joins_url = "https://www.facebook.com/groups/joins/?nav_source=tab"
+        print(f"[{uid}]  Truy cập danh sách nhóm đã tham gia...")
+        
+        # Chuyển hướng bằng DOM click để an toàn và giống người thật hơn
+        script_joins = f"""
             var a = document.createElement('a');
-            a.href = '{target_url}';
+            a.href = '{joins_url}';
             document.body.appendChild(a);
             a.click();
         """
-        driver.execute_script(script)
+        driver.execute_script(script_joins)
+        time.sleep(5)
+        
+        print(f"[{uid}]  Tìm và click vào nhóm {g_id}...")
+        group_clicked = False
+        for _ in range(4): # Cuộn vài lần để load thêm nhóm
+            try:
+                group_links = driver.find_elements(By.XPATH, f"//a[contains(@href, '/groups/{g_id}')]")
+                for glnk in group_links:
+                    if glnk.is_displayed():
+                        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", glnk)
+                        time.sleep(1)
+                        glnk.click()
+                        group_clicked = True
+                        break
+                if group_clicked:
+                    break
+            except:
+                pass
+            driver.execute_script("window.scrollBy(0, 1000);")
+            time.sleep(2)
+            
+        if not group_clicked:
+            print(f"[{uid}] ⚠️ Không tìm thấy nhóm trong danh sách, điều hướng trực tiếp bằng DOM click...")
+            script_target = f"""
+                var a = document.createElement('a');
+                a.href = '{target_url}';
+                document.body.appendChild(a);
+                a.click();
+            """
+            driver.execute_script(script_target)
+        else:
+            time.sleep(4)
+            if "sorting_setting=CHRONOLOGICAL" not in driver.current_url:
+                # Đảm bảo vào chế độ bài viết mới nhất
+                script_target = f"""
+                    var a = document.createElement('a');
+                    a.href = '{target_url}';
+                    document.body.appendChild(a);
+                    a.click();
+                """
+                driver.execute_script(script_target)
         
         # Đợi modal (nếu có) xuất hiện, thử nhiều lần trong 8 giây
         print(f"[{uid}] ⏳ Đang kiểm tra modal chào mừng nhóm...")
@@ -202,6 +249,13 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                 if task_config.get("IsImageComment"):
                     is_image_comment = True
                     images_dir = task_config.get("ImageFolderPath", "resources/images")
+                else:
+                    image_group_uids = task_config.get("ImageGroupUids", [])
+                    if image_group_uids:
+                        is_image_comment = any(item in group_id or item in target_url for item in image_group_uids)
+                        if is_image_comment:
+                            print(f"[{uid}] 🖼️ PHÁT HIỆN GROUP ƯU TIÊN ẢNH (Text Mode)! Sử dụng chế độ comment bằng ảnh.")
+                            images_dir = task_config.get("ImageFolderPath", "resources/images")
             else:
                 image_groups_file = "resources/image_groups.txt"
                 if os.path.exists(image_groups_file):
@@ -570,14 +624,27 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                 print(f"[{uid}] 🌟 PHÁT HIỆN GROUP ĐẶC BIỆT! Sử dụng file: {target_content_file}")
 
         # Xác định chế độ comment ảnh (Image Group logic)
-        image_groups_file = "resources/image_groups.txt"
         is_image_comment = False
-        if os.path.exists(image_groups_file):
-            with open(image_groups_file, "r", encoding="utf-8-sig") as f:
-                image_groups = [line.strip() for line in f if line.strip() and not line.startswith("#")]
-            is_image_comment = any(item in group_id or item in target_url for item in image_groups)
-            if is_image_comment:
-                print(f"[{uid}] 🖼️ PHÁT HIỆN GROUP ẢNH! Sử dụng chế độ comment bằng ảnh.")
+        images_dir = "resources/images"
+        if task_config:
+            if task_config.get("IsImageComment"):
+                is_image_comment = True
+                images_dir = task_config.get("ImageFolderPath", "resources/images")
+            else:
+                image_group_uids = task_config.get("ImageGroupUids", [])
+                if image_group_uids:
+                    is_image_comment = any(item in group_id or item in target_url for item in image_group_uids)
+                    if is_image_comment:
+                        print(f"[{uid}] 🖼️ PHÁT HIỆN GROUP ƯU TIÊN ẢNH! Sử dụng chế độ comment bằng ảnh.")
+                        images_dir = task_config.get("ImageFolderPath", "resources/images")
+        else:
+            image_groups_file = "resources/image_groups.txt"
+            if os.path.exists(image_groups_file):
+                with open(image_groups_file, "r", encoding="utf-8-sig") as f:
+                    image_groups = [line.strip() for line in f if line.strip() and not line.startswith("#")]
+                is_image_comment = any(item in group_id or item in target_url for item in image_groups)
+                if is_image_comment:
+                    print(f"[{uid}] 🖼️ PHÁT HIỆN GROUP ẢNH! Sử dụng chế độ comment bằng ảnh.")
 
         # Comment logic
         post_url = list(collected_links)[0]

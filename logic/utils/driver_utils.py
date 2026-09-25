@@ -34,10 +34,10 @@ def load_user_agents():
                     if ua:
                         uas.append(ua)
         elif getattr(config, 'RESOURCE_LOGGING', True):
-            print("⚠️ Không tìm thấy useragent.txt")
+            pass # print("⚠️ Không tìm thấy useragent.txt")
     except Exception as e:
         if getattr(config, 'RESOURCE_LOGGING', True):
-            print(f"⚠️ Lỗi đọc useragent.txt: {e}")
+            pass # print(f"⚠️ Lỗi đọc useragent.txt: {e}")
     return uas
 
 
@@ -45,7 +45,7 @@ def get_random_ua(uas):
     if not uas:
         return None
     ua = random.choice(uas)
-    print(f"🎭 User-Agent: {ua}")
+    # print(f"🎭 User-Agent: {ua}")
     return ua
 
 
@@ -81,7 +81,7 @@ def load_proxies():
                     if len(proxy_parts) >= 2:
                         proxy_key = f"{proxy_parts[0]}:{proxy_parts[1]}"
                         if proxy_key in blacklist:
-                            print(f"⏭️ Bỏ qua proxy blacklisted: {proxy_key}")
+                            # print(f"⏭️ Bỏ qua proxy blacklisted: {proxy_key}")
                             continue
                     
                     if len(proxy_parts) >= 4:
@@ -95,11 +95,11 @@ def load_proxies():
         
         if not all_proxies and not proxy_found:
             if getattr(config, 'RESOURCE_LOGGING', True):
-                print("⚠️ Không tìm thấy proxy.txt")
+                pass # print("⚠️ Không tìm thấy proxy.txt")
     
     except Exception as e:
         if getattr(config, 'RESOURCE_LOGGING', True):
-            print(f"❌ Lỗi tải proxy: {e}")
+            pass # print(f"❌ Lỗi tải proxy: {e}")
     
     return all_proxies
 
@@ -113,7 +113,7 @@ def get_sequential_proxy(proxies, last_proxy_index):
     next_index = (last_proxy_index + 1) % len(proxies)
     proxy = proxies[next_index]
     
-    print(f"🎲 Chọn proxy ({next_index + 1}/{len(proxies)}): {proxy['host']}:{proxy['port']}")
+    # print(f"🎲 Chọn proxy ({next_index + 1}/{len(proxies)}): {proxy['host']}:{proxy['port']}")
     return proxy, next_index
 
 
@@ -175,10 +175,10 @@ def get_service():
             manual_path = os.path.join(project_root, manual_path)
             
         if os.path.exists(manual_path):
-            print(f"🚀 Sử dụng chromedriver thủ công: {manual_path}")
+            # print(f"🚀 Sử dụng chromedriver thủ công: {manual_path}")
             return Service(executable_path=manual_path)
         else:
-            print(f"⚠️ Cảnh báo: File CHROMEDRIVER_PATH không tồn tại: {manual_path}")
+            pass # print(f"⚠️ Cảnh báo: File CHROMEDRIVER_PATH không tồn tại: {manual_path}")
             
     return Service(ChromeDriverManager().install())
 

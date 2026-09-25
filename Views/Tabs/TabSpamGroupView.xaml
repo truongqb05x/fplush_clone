@@ -130,6 +130,8 @@
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Border>
+
+
                         </StackPanel>
 
                         <!-- GIAO DIỆN IMAGE COMMENT -->
@@ -148,10 +150,27 @@
                             <TextBlock Text="Bot sẽ lấy ngẫu nhiên ảnh trong thư mục để bình luận." FontSize="11" Foreground="#888" TextWrapping="Wrap" Margin="0,5,0,0"/>
                         </StackPanel>
 
-                        <TextBlock Text="Danh sách Group ID / Link" FontSize="12" FontWeight="SemiBold" Foreground="#555" Margin="0,20,0,6"/>
-                        <Border BorderBrush="#dadce0" BorderThickness="1" Background="#fafbfc">
-                            <TextBox Text="{Binding GroupUids}" AcceptsReturn="True" TextWrapping="Wrap" Height="100" Padding="8" BorderThickness="0" FontFamily="Consolas" Background="Transparent"/>
-                        </Border>
+                        <Grid Margin="0,20,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="10"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="Danh sách Group ID / Link" FontSize="12" FontWeight="SemiBold" Foreground="#555" Margin="0,0,0,6"/>
+                                <Border BorderBrush="#dadce0" BorderThickness="1" Background="#fafbfc">
+                                    <TextBox Text="{Binding GroupUids}" AcceptsReturn="True" TextWrapping="Wrap" Height="100" Padding="8" BorderThickness="0" FontFamily="Consolas" Background="Transparent"/>
+                                </Border>
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2" Visibility="{Binding IsTextComment, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="Group ưu tiên ảnh (Text Mode)" FontSize="12" FontWeight="SemiBold" Foreground="#555" Margin="0,0,0,6"/>
+                                <Border BorderBrush="#dadce0" BorderThickness="1" Background="#fafbfc">
+                                    <TextBox Text="{Binding ImageGroupUids}" AcceptsReturn="True" TextWrapping="Wrap" Height="100" Padding="8" BorderThickness="0" FontFamily="Consolas" Background="Transparent"/>
+                                </Border>
+                            </StackPanel>
+                        </Grid>
                     </StackPanel>
 
                     <Grid Grid.Column="2">

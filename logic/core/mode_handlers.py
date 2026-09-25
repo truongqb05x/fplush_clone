@@ -339,14 +339,14 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
         if task_config.get("ActionBeforePost"):
             print(f"[{uid}]  Thực hiện hành động TRƯỚC khi post...")
             cfg = task_config.get("ConfigBeforePost", {})
-            if cfg.get("InteractNewsFeed"):
-                feed_time = cfg.get("FeedTimeSeconds", 60)
+            if cfg.get("IsScrollFeed"):
+                feed_time = cfg.get("ScrollTimeMax", 60)
                 warm_up_account(driver, uid, warmup_time=feed_time, cfg=cfg)
-            if cfg.get("ReadNotifications"):
+            if cfg.get("IsReadNotifications"):
                 count = cfg.get("ReadNotificationsCount", 1)
                 for _ in range(count):
                     read_one_random_notification(driver, uid)
-            if cfg.get("MessageTwoWays"):
+            if cfg.get("IsChatWithEachOther"):
                 run_two_way_chat()
                 
     else:
@@ -465,14 +465,14 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
                 if execution_mode == 1 and task_config and task_config.get("ActionAfterPost"):
                     print(f"[{uid}]  Thực hiện hành động SAU khi post...")
                     cfg = task_config.get("ConfigAfterPost", {})
-                    if cfg.get("InteractNewsFeed"):
-                        feed_time = cfg.get("FeedTimeSeconds", 60)
+                    if cfg.get("IsScrollFeed"):
+                        feed_time = cfg.get("ScrollTimeMax", 60)
                         warm_up_account(driver, uid, warmup_time=feed_time, cfg=cfg)
-                    if cfg.get("ReadNotifications"):
+                    if cfg.get("IsReadNotifications"):
                         count = cfg.get("ReadNotificationsCount", 1)
                         for _ in range(count):
                             read_one_random_notification(driver, uid)
-                    if cfg.get("MessageTwoWays"):
+                    if cfg.get("IsChatWithEachOther"):
                         run_two_way_chat()
                         
                 break
