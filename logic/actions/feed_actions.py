@@ -4,6 +4,8 @@ import random
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
 from actions.like_actions import random_like_post
+from actions.read_notifications import read_one_random_notification
+from actions.chat_two_ways import run_two_way_chat
 
 def warm_up_account(driver, uid, warmup_time=None, cfg=None):
     if warmup_time is None:
@@ -26,6 +28,26 @@ def warm_up_account(driver, uid, warmup_time=None, cfg=None):
         if cfg.get("IsReactionAngry"): allowed_reactions.extend(["Phẫn nộ", "Angry"])
         reaction_delay_min = cfg.get("ReactionDelayMin", 5)
         reaction_delay_max = cfg.get("ReactionDelayMax", 15)
+        is_read_noti = cfg.get("IsReadNoti", False)
+        read_noti_count = cfg.get("ReadNotiCount", 5)
+        is_chat = cfg.get("IsChat", False)
+        is_random_click = cfg.get("IsRandomClick", True)
+    else:
+        is_read_noti = False
+        read_noti_count = 5
+        is_chat = False
+        is_random_click = True
+
+    if is_read_noti:
+        print(f"[{uid}]  Bắt đầu đọc {read_noti_count} thông báo...")
+        for _ in range(read_noti_count):
+            read_one_random_notification(driver, uid)
+            time.sleep(random.uniform(2, 5))
+
+    if is_chat:
+        print(f"[{uid}]  Bắt đầu mở hộp thoại chat...")
+        run_two_way_chat(driver, uid, task_config=cfg)
+        time.sleep(3)
 
     # Ưu tiên News Feed để có nhiều link tương tác
     url = "https://www.facebook.com/"
@@ -37,7 +59,7 @@ def warm_up_account(driver, uid, warmup_time=None, cfg=None):
         time.sleep(random.uniform(4, 9))
         
         # Ngẫu nhiên mở link (khoảng 20% cơ hội mỗi lần cuộn)
-        if random.random() < 0.2:
+        if is_random_click and random.random() < 0.2:
             try:
                 # Tìm các link tiềm năng (bài viết, link chia sẻ...)
                 candidates = driver.find_elements(By.CSS_SELECTOR, 'a[role="link"]:not([data-scanned="true"])')

@@ -196,19 +196,35 @@ def run_cli():
 
         elif choice == "3":
             # MODE 3: WARM UP ACCOUNTS INFINITELY
-            try:
-                warmup_minutes = int(input(" Nhập số phút nuôi cho mỗi tài khoản (Ví dụ: 5): ").strip())
-            except ValueError:
-                print(" Lỗi định dạng nhập vào. Sẽ sử dụng mặc định là 5 phút.")
-                warmup_minutes = 5
+            if task_config and "FeedTime" in task_config:
+                warmup_minutes = int(task_config.get("FeedTime", 5))
+            else:
+                try:
+                    warmup_minutes = int(input(" Nhập số phút nuôi cho mỗi tài khoản (Ví dụ: 5): ").strip())
+                except ValueError:
+                    print(" Lỗi định dạng nhập vào. Sẽ sử dụng mặc định là 5 phút.")
+                    warmup_minutes = 5
                 
             warmup_time_sec = warmup_minutes * 60
-            print(f" BẮT ĐẦU CHẾ ĐỘ 3: Nuôi Tài Khoản ({max_threads} luồng, {warmup_minutes} phút/acc)")
             
+            is_reset_dcom = task_config.get("IsResetDcom", False) if task_config else False
+            reset_dcom_after = task_config.get("ResetDcomAfter", 2) if task_config else 2
+            proxy_method = task_config.get("ProxyMethod", 0) if task_config else 0
+            accounts_processed = 0
+
+            is_repeat = task_config.get("IsRepeat", False) if task_config else False
+            repeat_count = task_config.get("RepeatCount", 1) if task_config else 1
+            if not is_repeat:
+                repeat_count = 1
+
             cycle_count = 1
-            while True:
+            while cycle_count <= repeat_count:
                 print(f"\n BẮT ĐẦU VÒNG LẶP DANH SÁCH THỨ {cycle_count}")
-                current_cookies = read_file(config.COOKIE_FILE)
+                if task_config and task_config.get("SelectedAccountsInfo"):
+                    current_cookies = task_config.get("SelectedAccountsInfo")
+                else:
+                    current_cookies = read_file(config.COOKIE_FILE)
+                    
                 if not current_cookies:
                     print(" Danh sách tài khoản trống. Thử lại sau 30s...")
                     time.sleep(30)
@@ -218,18 +234,36 @@ def run_cli():
                 for i in range(0, len(current_cookies), max_threads):
                     batch = current_cookies[i:i+max_threads]
                     proxy_turn = f"{cycle_count}_{batch_id}"
-                    print(f"\n Đang chạy đợt {batch_id + 1} (gồm {len(batch)} tài khoản)...")
                     with ThreadPoolExecutor(max_workers=max_threads) as executor:
                         futures = []
                         for idx, cookie in enumerate(batch):
                             slot_index = idx % max_threads
-                            futures.append(executor.submit(run_account_task, cookie, slot_index, max_limit, is_edit_comment, execution_mode=3, warmup_time_sec=warmup_time_sec, cycle_count=proxy_turn))
+                            futures.append(executor.submit(run_account_task, cookie, slot_index, max_limit, is_edit_comment, execution_mode=3, warmup_time_sec=warmup_time_sec, cycle_count=proxy_turn, task_config=task_config))
                         
                         # Chờ các luồng trong đợt này hoàn thành
                         for f in futures:
                             f.result()
                     
+                    accounts_processed += len(batch)
                     batch_id += 1
+
+                    # Kiểm tra Reset DCOM sau mỗi đợt (chỉ KiotProxy)
+                    if is_reset_dcom and proxy_method == 2 and reset_dcom_after > 0:
+                        if accounts_processed >= reset_dcom_after:
+                            print(f"\n Đã chạy {accounts_processed} tài khoản. Đang thực hiện Reset DCOM để lấy IP mới...")
+                            try:
+                                import subprocess
+                                result = subprocess.run(["net", "stop", "RasMan"], capture_output=True, text=True, timeout=15)
+                                time.sleep(2)
+                                result = subprocess.run(["net", "start", "RasMan"], capture_output=True, text=True, timeout=15)
+                                print(f" Reset DCOM hoàn tất. Đợi 10s cho kết nối ổn định...")
+                                time.sleep(10)
+                                # Xóa cache KiotProxy để buộc lấy IP mới
+                                with KIOT_PROXY_LOCK:
+                                    KIOT_PROXY_CACHE.clear()
+                                accounts_processed = 0  # reset bộ đếm
+                            except Exception as e:
+                                print(f" Lỗi khi Reset DCOM: {e}")
                 
                 print(f" Đã chạy xong 1 vòng ({len(current_cookies)} tài khoản). Nghỉ 600s trước khi lặp lại từ đầu...")
                 time.sleep(600)

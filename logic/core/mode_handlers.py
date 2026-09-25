@@ -35,7 +35,7 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
 
     if execution_mode == 3:
         print(f"[{uid}] MODE 3: Tiến hành nuôi tài khoản trong {warmup_time_sec} giây...")
-        warm_up_account(driver, uid, warmup_time=warmup_time_sec)
+        warm_up_account(driver, uid, warmup_time=warmup_time_sec, cfg=task_config)
         print(f"[{uid}]  MODE 3: Nuôi tài khoản hoàn tất.")
         return True
 
