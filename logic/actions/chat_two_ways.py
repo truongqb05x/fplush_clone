@@ -26,9 +26,17 @@ def _get_chat_sync(uid: str, target_uid: str) -> dict:
     with _CHAT_SYNC_LOCK:
         if pair_key not in _CHAT_SYNC:
             _CHAT_SYNC[pair_key] = {
+                'ready_sender': threading.Event(),
+                'ready_receiver': threading.Event(),
+                'chat_box_sender': threading.Event(),
+                'chat_box_receiver': threading.Event(),
                 'sender_added': threading.Event(),
                 'receiver_accepted': threading.Event(),
                 'sender_msg_sent': threading.Event(),
+                'turn_1': threading.Event(),
+                'turn_2': threading.Event(),
+                'turn_3': threading.Event(),
+                'turn_4': threading.Event(),
             }
         return _CHAT_SYNC[pair_key]
 
@@ -73,6 +81,23 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
         is_sender = uid < target_uid
         flow_type = "sender" if is_sender else "receiver"
         sync = _get_chat_sync(uid, target_uid)
+
+        # --- BƯỚC ĐỒNG BỘ ĐẦU VÀO (Rendezvous) ---
+        print(f"[{uid}] ⏳ Đang chờ {target_uid} vào luồng chat (tối đa 3 phút)...")
+        if is_sender:
+            sync['ready_sender'].set()
+            if not sync['ready_receiver'].wait(timeout=180):
+                print(f"[{uid}] ❌ Đối tác {target_uid} không vào luồng chat (có thể đang kẹt hoặc lỗi). Hủy bỏ chat 2 chiều.")
+                sync['ready_sender'].clear() # Rút lại tín hiệu ready
+                return
+        else:
+            sync['ready_receiver'].set()
+            if not sync['ready_sender'].wait(timeout=180):
+                print(f"[{uid}] ❌ Đối tác {target_uid} không vào luồng chat (có thể đang kẹt hoặc lỗi). Hủy bỏ chat 2 chiều.")
+                sync['ready_receiver'].clear() # Rút lại tín hiệu ready
+                return
+                
+        print(f"[{uid}] 🚀 Đã kết nối với {target_uid}. Bắt đầu thực hiện logic chat.")
 
         friends_xpath = (
             "//*["
@@ -279,93 +304,141 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
                         sync['receiver_accepted'].set() # Vẫn set để luồng chat thử chạy tiếp (có thể đã là bạn mà lỗi dom)
 
 
-        # ─── BƯỚC 2: Đồng bộ trước khi nhắn tin ───
+        # ─── BƯỚC 2: Đồng bộ sau khi kết bạn ───
         if is_sender:
             print(f"[{uid}] ⏳ Chờ {target_uid} xác nhận kết bạn (tối đa 2 phút)...")
             sync['receiver_accepted'].wait(timeout=120)
         else:
-            print(f"[{uid}] ⏳ Chờ {target_uid} nhắn tin trước (tối đa 2 phút)...")
-            sync['sender_msg_sent'].wait(timeout=120)
-            print(f"[{uid}] 💬 Bắt đầu tìm khung chat...")
+            print(f"[{uid}] ⏳ Đã xác nhận kết bạn. Chờ đồng bộ tìm khung chat...")
+            time.sleep(2)
 
-        # ─── BƯỚC 3: Mở khung chat ───
+        # ─── BƯỚC 3: Mở và Đồng bộ khung chat ───
         chat_box = None
-        for attempt in range(3):
+        for attempt in range(5):
+            print(f"[{uid}] 🔍 Tìm và mở khung chat (lần {attempt + 1}/5)...")
             try:
                 try:
                     chat_box = WebDriverWait(driver, 3).until(
                         EC.element_to_be_clickable((By.XPATH, chat_box_xpath))
                     )
-                    print(f"[{uid}] 💬 Khung chat đã có sẵn.")
                 except Exception:
-                    print(f"[{uid}] 🔍 Tìm nút Nhắn tin (lần {attempt + 1})...")
                     msg_btn_xpath = "//*[(@aria-label='Message' or @aria-label='Nhắn tin' or starts-with(@aria-label, 'Gửi tin nhắn')) and @role='button']"
                     msg_btn = WebDriverWait(driver, 10).until(
                         EC.presence_of_element_located((By.XPATH, msg_btn_xpath))
                     )
+                    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", msg_btn)
+                    time.sleep(1)
                     driver.execute_script("arguments[0].click();", msg_btn)
-                    print(f"[{uid}] 💬 Đã nhấn nút Nhắn tin. Chờ khung chat...")
+                    print(f"[{uid}] 💬 Đã nhấn nút Nhắn tin. Chờ khung chat hiện lên...")
                     time.sleep(5)
                     chat_box = WebDriverWait(driver, 10).until(
                         EC.element_to_be_clickable((By.XPATH, chat_box_xpath))
                     )
                 
                 if chat_box:
-                    break
+                    print(f"[{uid}] ✅ Đã mở được khung chat. Đang đợi đối tác mở thành công...")
+                    if is_sender:
+                        sync['chat_box_sender'].set()
+                        if sync['chat_box_receiver'].wait(timeout=45):
+                            print(f"[{uid}] 🤝 Cả 2 đã mở khung chat. Bắt đầu nhắn tin!")
+                            break
+                        else:
+                            sync['chat_box_sender'].clear()
+                    else:
+                        sync['chat_box_receiver'].set()
+                        if sync['chat_box_sender'].wait(timeout=45):
+                            print(f"[{uid}] 🤝 Cả 2 đã mở khung chat. Bắt đầu nhắn tin!")
+                            break
+                        else:
+                            sync['chat_box_receiver'].clear()
+                            
+                    print(f"[{uid}] ⚠️ Đối tác chưa mở được khung chat. Sẽ F5 và thử lại...")
             except Exception as e:
-                if attempt < 2:
-                    print(f"[{uid}] ⚠️ Không mở được khung chat. F5 tải lại trang...")
-                    driver.refresh()
-                    time.sleep(8)
-                else:
-                    print(f"[{uid}] ❌ Thất bại mở khung chat sau 3 lần thử.")
+                print(f"[{uid}] ⚠️ Không tìm thấy khung chat. Đang F5 tải lại trang...")
+                
+            chat_box = None
+            driver.refresh()
+            time.sleep(8)
         
         if not chat_box:
             raise Exception("Không thể tìm thấy hoặc mở khung chat.")
 
-        chat_box.click()
-        demo_msg = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(15))
+        # ─── HÀM GỬI TIN NHẮN (dùng chung cho các lượt) ───
+        def send_chat_messages(num_msgs):
+            for msg_index in range(num_msgs):
+                try:
+                    chat_box.click()
+                except:
+                    pass
+                demo_msg = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(random.randint(5, 15)))
+                print(f"[{uid}] ⌨️ Đang gõ tin nhắn {msg_index + 1}/{num_msgs}...")
+                for char in demo_msg:
+                    try:
+                        chat_box.send_keys(char)
+                    except:
+                        pass
+                    time.sleep(random.uniform(0.05, 0.2))
+                time.sleep(1)
+                msg_displayed = False
+                for attempt in range(1, 4):
+                    try:
+                        send_btn = driver.find_element(By.XPATH, "//div[@aria-label='Press enter to send' or @aria-label='Nhấn Enter để gửi']")
+                        driver.execute_script("arguments[0].click();", send_btn)
+                    except:
+                        from selenium.webdriver.common.keys import Keys
+                        try:
+                            chat_box.send_keys(Keys.ENTER)
+                        except:
+                            pass
+                    sent_xpath = f"//*[contains(text(), '{demo_msg}')]"
+                    try:
+                        WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.XPATH, sent_xpath)))
+                        print(f"[{uid}] ✅ Đã gửi thành công tin {msg_index + 1}!")
+                        msg_displayed = True
+                        break
+                    except:
+                        print(f"[{uid}] ⚠️ Chưa thấy xác nhận tin nhắn {msg_index + 1}. Thử lại...")
+                if not msg_displayed:
+                    print(f"[{uid}] ❌ Gửi thất bại tin {msg_index + 1}.")
+                if msg_index < num_msgs - 1:
+                    time.sleep(random.uniform(2, 5))
 
-        print(f"[{uid}] ⌨️ Đang gõ tin nhắn...")
-        for char in demo_msg:
-            chat_box.send_keys(char)
-            time.sleep(random.uniform(0.05, 0.2))
+        # ─── BƯỚC 4: LOGIC CHAT TƯƠNG TÁC (PING-PONG) ───
+        if is_sender:
+            # LƯỢT 1: Sender gửi mở đầu
+            print(f"[{uid}] 💬 LƯỢT 1: Sender đang gửi tin nhắn mở đầu...")
+            send_chat_messages(random.randint(1, 2))
+            sync['turn_1'].set()
+            
+            # LƯỢT 3: Sender rep lại sau khi Receiver đã rep
+            print(f"[{uid}] ⏳ Đợi {target_uid} rep lại lượt 1...")
+            if sync['turn_2'].wait(timeout=90):
+                print(f"[{uid}] 💬 LƯỢT 3: Sender đang rep lại...")
+                time.sleep(random.uniform(3, 7))
+                send_chat_messages(random.randint(1, 2))
+            sync['turn_3'].set()
+            
+            # Chờ Receiver chốt hạ trước khi kết thúc để không tắt trình duyệt sớm
+            sync['turn_4'].wait(timeout=90)
+            
+        else:
+            # LƯỢT 2: Receiver rep lại tin mở đầu
+            print(f"[{uid}] ⏳ Đợi {target_uid} nhắn tin mở đầu...")
+            if sync['turn_1'].wait(timeout=120):
+                print(f"[{uid}] 💬 LƯỢT 2: Receiver đang rep lại tin nhắn mở đầu...")
+                time.sleep(random.uniform(3, 7))
+                send_chat_messages(random.randint(1, 2))
+            sync['turn_2'].set()
+            
+            # LƯỢT 4: Receiver chốt hạ câu cuối
+            print(f"[{uid}] ⏳ Đợi {target_uid} rep lại lượt 3...")
+            if sync['turn_3'].wait(timeout=90):
+                print(f"[{uid}] 💬 LƯỢT 4: Receiver đang chốt hạ cuộc trò chuyện...")
+                time.sleep(random.uniform(3, 7))
+                send_chat_messages(random.randint(1, 2))
+            sync['turn_4'].set()
 
-        time.sleep(1)
-        msg_displayed = False
-        max_retries = 3
-
-        for attempt in range(1, max_retries + 1):
-            print(f"[{uid}] 📤 Gửi tin nhắn... ({attempt}/{max_retries})")
-            try:
-                send_btn = driver.find_element(
-                    By.XPATH,
-                    "//div[@aria-label='Press enter to send' or @aria-label='Nhấn Enter để gửi']"
-                )
-                driver.execute_script("arguments[0].click();", send_btn)
-            except Exception:
-                from selenium.webdriver.common.keys import Keys
-                chat_box.send_keys(Keys.ENTER)
-
-            sent_xpath = f"//*[contains(text(), '{demo_msg}')]"
-            try:
-                WebDriverWait(driver, 30).until(
-                    EC.presence_of_element_located((By.XPATH, sent_xpath))
-                )
-                print(f"[{uid}] ✅ Đã gửi thành công!")
-                msg_displayed = True
-                if is_sender:
-                    sync['sender_msg_sent'].set()
-                break
-            except Exception:
-                print(f"[{uid}] ⚠️ Chưa thấy tin nhắn sau 30s. Thử lại...")
-
-        if not msg_displayed:
-            print(f"[{uid}] ❌ Gửi thất bại sau {max_retries} lần thử.")
-            if is_sender:
-                sync['sender_msg_sent'].set()  # unblock receiver dù thất bại
-
-        print(f"[{uid}] 🏁 Hoàn thành chat 2 chiều. Tiếp tục comment group...")
+        print(f"[{uid}] 🏁 Hoàn thành chat tương tác 2 chiều (Ping-Pong). Tiếp tục tác vụ khác...")
 
     except Exception as e:
         print(f"[{uid}] ❌ Lỗi chat 2 chiều: {e}")
@@ -373,8 +446,11 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
         try:
             if uid < target_uid:
                 if not sync['sender_added'].is_set(): sync['sender_added'].set()
-                if not sync['sender_msg_sent'].is_set(): sync['sender_msg_sent'].set()
+                if not sync['turn_1'].is_set(): sync['turn_1'].set()
+                if not sync['turn_3'].is_set(): sync['turn_3'].set()
             else:
                 if not sync['receiver_accepted'].is_set(): sync['receiver_accepted'].set()
+                if not sync['turn_2'].is_set(): sync['turn_2'].set()
+                if not sync['turn_4'].is_set(): sync['turn_4'].set()
         except Exception:
             pass

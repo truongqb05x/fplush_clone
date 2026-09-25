@@ -55,37 +55,49 @@ def login_with_credentials(driver, username, password):
         # 3. Click nút Đăng nhập
         # Dựa trên HTML: <span class="...">Đăng nhập</span> bên trong một div role="none"
         # Thêm các trường hợp tiếng Anh và dùng XPath linh hoạt hơn
+        # 3. Click nút Đăng nhập
+        # Cập nhật XPath cho Facebook React: div có role="button" và aria-label="Log in"
         login_btn_selectors = [
+            (By.XPATH, "//*[(@aria-label='Log in' or @aria-label='Đăng nhập' or @aria-label='Log In') and @role='button']"),
             (By.NAME, "login"),
-            (By.XPATH, "//button[@type='submit']"),
-            (By.XPATH, "//div[@aria-label='Log in' or @aria-label='Đăng nhập']"),
-            (By.XPATH, "//span[contains(text(), 'Đăng nhập') or contains(text(), 'Log in') or contains(text(), 'Log In')]"),
-            (By.XPATH, "//div[@role='button']//span[contains(text(), 'Đăng nhập') or contains(text(), 'Log in') or contains(text(), 'Log In')]")
+            (By.XPATH, "//button[@name='login' or @type='submit']"),
+            (By.XPATH, "//div[@role='button']//*[contains(text(), 'Đăng nhập') or contains(text(), 'Log in')]")
         ]
         
-        login_btn = None
+        login_btn_clicked = False
         for by, val in login_btn_selectors:
             try:
-                login_btn = wait_for_clickable_with_retry(driver, by, val, timeout=5, retry=0, description=f"Login button ({val})")
-                if login_btn:
+                btns = driver.find_elements(by, val)
+                if btns:
+                    for btn in btns:
+                        if btn.is_displayed():
+                            try:
+                                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn)
+                                time.sleep(0.5)
+                                # Ưu tiên dùng JS click vì thẻ div của FB hay bị báo lỗi element not interactable
+                                driver.execute_script("arguments[0].click();", btn)
+                                login_btn_clicked = True
+                                break
+                            except Exception:
+                                pass
+                if login_btn_clicked:
                     break
-            except:
+            except Exception:
                 continue
         
-        if login_btn:
+        if not login_btn_clicked:
+            # Fallback: Nếu mọi loại nút click đều xịt, nhấn thẳng phím Enter trên ô mật khẩu
             try:
-                login_btn.click()
+                pass_input.send_keys(Keys.ENTER)
             except:
-                driver.execute_script("arguments[0].click();", login_btn)
-        else:
-            pass_input.send_keys(Keys.ENTER)
+                pass
 
         # Polling mỗi 1 giây, tối đa 30 giây.
         # Facebook hay đi qua nhiều bước trung gian:
         #   login → facebook.com/ (thoáng) → two_step_verification → facebook.com/ (đích)
         # → Chỉ kết luận THÀNH CÔNG khi URL thực sự là trang sạch (không login/two_step/checkpoint).
         # → Tiếp tục chờ qua các bước trung gian cho đến hết 30 giây.
-        max_wait = 30
+        max_wait = 60
         poll_interval = 1
         elapsed = 0
         success = False

@@ -25,7 +25,10 @@ def random_like_post(driver, uid, allowed_reactions=None):
             driver.execute_script("arguments[0].setAttribute('data-liked', 'true')", target_like)
             
             # Hover vào nút Like để hiện menu cảm xúc
-            ActionChains(driver).move_to_element(target_like).pause(2).perform()
+            try:
+                ActionChains(driver).move_to_element(target_like).pause(2).perform()
+            except Exception:
+                driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", target_like)
             time.sleep(2)  # Đợi popup hiện lên
             
             # Các nhãn cảm xúc phổ biến (Việt / Anh)
@@ -46,12 +49,20 @@ def random_like_post(driver, uid, allowed_reactions=None):
                 reaction_name = chosen_reaction.get_attribute("aria-label")
                 
                 # Di chuột đến cảm xúc đó và click
-                ActionChains(driver).move_to_element(chosen_reaction).pause(0.5).click().perform()
+                try:
+                    ActionChains(driver).move_to_element(chosen_reaction).pause(0.5).click().perform()
+                except Exception:
+                    driver.execute_script("arguments[0].click();", chosen_reaction)
+                
                 print(f"[{uid}] 👍 Đã thả cảm xúc bài viết: {reaction_name}")
                 return True
             else:
                 # Fallback: Nếu không bắt được popup cảm xúc, click mặc định vào nút Like
-                ActionChains(driver).click(target_like).perform()
+                try:
+                    ActionChains(driver).click(target_like).perform()
+                except Exception:
+                    driver.execute_script("arguments[0].click();", target_like)
+                    
                 print(f"[{uid}] 👍 Không bắt được popup cảm xúc, đã bấm Like mặc định.")
                 return True
     except Exception as e:
