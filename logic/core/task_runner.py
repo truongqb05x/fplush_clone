@@ -247,7 +247,7 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                     pass
             
             if is_logged_in:
-                print(f"[{uid}]  Session cũ trong Profile vẫn còn hiệu lực. Bỏ qua nạp cookie.")
+                pass # Session cũ vẫn còn hiệu lực
             else:
                 # print(f"[{uid}]  Session hết hạn/chưa có (hoặc sai UA). Tiến hành nạp cookie mới...")
                 # driver.delete_all_cookies() # Đã ẩn để tránh clear profile vô ích

@@ -112,9 +112,9 @@ def run_cli():
         # print("="*50)
         
         if len(sys.argv) > 1:
-            print(f"👉 Chế độ được truyền qua đối số: {choice}")
+            # print(f"👉 Chế độ được truyền qua đối số: {choice}")
             if task_config:
-                print(f" Loaded task config from {sys.argv[2].strip()}")
+                pass # print(f" Loaded task config from {sys.argv[2].strip()}")
         else:
             try:
                 choice = input("👉 Nhập lựa chọn: ").strip()
@@ -564,7 +564,7 @@ def run_cli():
 
         else:
             # MODE 1: SPAM COMMENT GROUPS (CONFIGURABLE)
-            print(f" Bắt đầu quy trình Spam Comment Groups từ cấu hình UI...")
+            # print(f" Bắt đầu quy trình Spam Comment Groups từ cấu hình UI...")
             
             # Lấy thông số từ config
             is_repeat = task_config.get("IsRepeat", False) if task_config else False
@@ -586,7 +586,7 @@ def run_cli():
 
             cycle_count = 1
             while cycle_count <= repeat_count:
-                print(f"\n BẮT ĐẦU VÒNG LẶP DANH SÁCH THỨ {cycle_count}/{repeat_count}")
+                # print(f"\n BẮT ĐẦU VÒNG LẶP DANH SÁCH THỨ {cycle_count}/{repeat_count}")
                 if task_config and task_config.get("SelectedAccountsInfo"):
                     current_cookies = task_config.get("SelectedAccountsInfo")
                 else:
@@ -602,7 +602,7 @@ def run_cli():
                 for i in range(0, len(current_cookies), max_threads):
                     batch = current_cookies[i:i+max_threads]
                     proxy_turn = f"{cycle_count}_{batch_id}"
-                    print(f"\n Đang chạy đợt {batch_id + 1} (gồm {len(batch)} tài khoản)...")
+                    # print(f"\n Đang chạy đợt {batch_id + 1} (gồm {len(batch)} tài khoản)...")
                     with ThreadPoolExecutor(max_workers=max_threads) as executor:
                         futures = []
                         for idx, cookie in enumerate(batch):

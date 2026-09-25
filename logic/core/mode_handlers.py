@@ -333,7 +333,7 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
         return True
 
     if execution_mode == 1 and task_config:
-        print(f"[{uid}]  Sử dụng cấu hình từ UI...")
+        # print(f"[{uid}]  Sử dụng cấu hình từ UI...")
         g_list = task_config.get("GroupUids", [])
         
         if task_config.get("ActionBeforePost"):
@@ -347,7 +347,7 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
                 for _ in range(count):
                     read_one_random_notification(driver, uid)
             if cfg.get("IsChatWithEachOther"):
-                run_two_way_chat()
+                run_two_way_chat(driver=driver, uid=uid, task_config=task_config)
                 
     else:
         warm_up_account(driver, uid, warmup_time=warmup_time_sec)
@@ -473,7 +473,7 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
                         for _ in range(count):
                             read_one_random_notification(driver, uid)
                     if cfg.get("IsChatWithEachOther"):
-                        run_two_way_chat()
+                        run_two_way_chat(driver=driver, uid=uid, task_config=task_config)
                         
                 break
             else:
