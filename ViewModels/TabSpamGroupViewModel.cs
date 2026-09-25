@@ -251,7 +251,7 @@ namespace FPlusClone.ViewModels
         public bool IsRunning
         {
             get => _isRunning;
-            set { if (_isRunning != value) { _isRunning = value; OnPropertyChanged(); } }
+            set { if (_isRunning != value) { _isRunning = value; OnPropertyChanged(); System.Windows.Application.Current.Dispatcher.Invoke(() => System.Windows.Input.CommandManager.InvalidateRequerySuggested()); } }
         }
 
         private string _statusText;

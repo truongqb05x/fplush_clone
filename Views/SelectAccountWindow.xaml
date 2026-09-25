@@ -37,8 +37,10 @@
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
 
-                <DataGridTextColumn Header="UID" Binding="{Binding Uid}" Width="150" IsReadOnly="True"/>
-                <DataGridTextColumn Header="Tên" Binding="{Binding Name}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="UID" Binding="{Binding Uid}" Width="150" IsReadOnly="True" CanUserSort="True"/>
+                <DataGridTextColumn Header="Pass" Binding="{Binding Password}" Width="100" IsReadOnly="True" CanUserSort="True"/>
+                <DataGridTextColumn Header="Tên" Binding="{Binding Name}" Width="150" IsReadOnly="True" CanUserSort="True"/>
+                <DataGridTextColumn Header="Note" Binding="{Binding Note}" Width="*" IsReadOnly="True" CanUserSort="True"/>
             </DataGrid.Columns>
         </DataGrid>
 

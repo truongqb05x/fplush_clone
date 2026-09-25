@@ -56,7 +56,9 @@ namespace FPlusClone.Views
                     Name = a.Name, 
                     Cookie = a.Cookie, 
                     Token = a.Token,
-                    Folder = a.Folder
+                    Folder = a.Folder,
+                    Password = a.Password,
+                    Note = a.Note
                 })
             );
 

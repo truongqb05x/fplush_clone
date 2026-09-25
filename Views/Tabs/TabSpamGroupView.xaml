@@ -186,6 +186,7 @@
                                                     </Trigger>
                                                     <Trigger Property="IsEnabled" Value="False">
                                                         <Setter Property="Background" Value="#a0d8c0"/>
+                                                        <Setter Property="Opacity" Value="0.6"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
