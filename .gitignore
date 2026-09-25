@@ -1,2 +1,7 @@
 *.json
 *.txt
+profiles/
+resources/
+*.log
+__pycache__/
+*.pyc
