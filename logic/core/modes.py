@@ -96,8 +96,14 @@ def run_cli():
         else:
             pass # print(" No config file found, using default settings.")
 
+        if task_config:
+            if "MaxThreads" in task_config:
+                max_threads = int(task_config.get("MaxThreads", max_threads))
+            if "MaxCommentsPerAcc" in task_config:
+                max_limit = int(task_config.get("MaxCommentsPerAcc", max_limit))
+
         MAX_THREADS = max_threads 
-        
+
         # print("\n" + "="*50)
         # print("          FB TOOLS - CHỌN CHẾ ĐỘ CHẠY")
         # print("="*50)

@@ -105,10 +105,22 @@ def login_with_credentials(driver, username, password):
                 break
 
             if not is_login and not is_two_step and not is_checkpoint:
-                # URL sạch — đã qua hết bước trung gian
-                success = True
-                print(f"[{username}] ✅ Login thành công.")
-                break
+                # Đợi thêm 3s để đảm bảo trình duyệt không tự redirect sang trang 2FA/checkpoint
+                time.sleep(3)
+                elapsed += 3
+                url = driver.current_url.lower()
+                is_login     = "login"      in url
+                is_two_step  = "two_step"   in url or "two_factor" in url
+                is_checkpoint = check_checkpoint(driver)
+                
+                if is_checkpoint:
+                    break
+
+                if not is_login and not is_two_step and not is_checkpoint:
+                    # URL sạch thực sự — đã qua hết bước trung gian
+                    success = True
+                    print(f"[{username}] ✅ Login thành công.")
+                    break
 
         if success:
             return True

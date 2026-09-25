@@ -6,7 +6,6 @@ from selenium.webdriver.common.action_chains import ActionChains
 from actions.like_actions import random_like_post
 
 def warm_up_account(driver, uid, warmup_time=None, cfg=None):
-    print(f"[{uid}] 🍵 Đang nuôi tài khoản (Warm-up)...")
     if warmup_time is None:
         warmup_time = random.randint(120, 240) # 2-4 phút
     start_time = time.time()
@@ -55,7 +54,6 @@ def warm_up_account(driver, uid, warmup_time=None, cfg=None):
                     driver.execute_script("arguments[0].setAttribute('data-scanned', 'true')", target)
                     
                     link_href = target.get_attribute("href")
-                    print(f"[{uid}] 🖱️ Ngẫu nhiên mở link: {link_href[:60]}...")
                     
                     # Click trực tiếp trong cùng tab
                     target.click()
@@ -69,7 +67,6 @@ def warm_up_account(driver, uid, warmup_time=None, cfg=None):
                         wait_view = int(remaining_time - 3)
                     
                     if wait_view > 0:
-                        print(f"[{uid}] ⏳ Đang xem nội dung trong {wait_view}s...")
                         end_view_time = time.time() + wait_view
                         
                         # Vòng lặp cuộn dần dần để giả lập người dùng đọc nội dung
@@ -86,13 +83,10 @@ def warm_up_account(driver, uid, warmup_time=None, cfg=None):
                                 break
                             else:
                                 time.sleep(chunk_sleep)
-                    else:
-                        print(f"[{uid}] ⏳ Không đủ thời gian còn lại để xem chi tiết, chuẩn bị quay lại.")
                     
                     # Quay lại Feed để tiếp tục nuôi
                     driver.back()
                     time.sleep(3)
-                    print(f"[{uid}] 🔙 Đã quay lại News Feed.")
             except Exception:
                 # Bỏ qua lỗi nhỏ khi tìm link/click để không làm crash luồng nuôi
                 pass
@@ -102,17 +96,11 @@ def warm_up_account(driver, uid, warmup_time=None, cfg=None):
             # Ngẫu nhiên thả cảm xúc theo cấu hình (tỷ lệ 15% mỗi lần cuộn)
             if random.random() < 0.15:
                 delay = random.uniform(reaction_delay_min, reaction_delay_max)
-                print(f"[{uid}] ⏳ Đợi {int(delay)}s trước khi thả cảm xúc (cấu hình like)...")
                 time.sleep(delay)
                 random_like_post(driver, uid, allowed_reactions=allowed_reactions)
         else:
             # Ngẫu nhiên thả cảm xúc mặc định (Giảm xuống còn khoảng 5% cơ hội mỗi lần cuộn để tránh spam Like)
             if random.random() < 0.05:
                 random_like_post(driver, uid)
-            
-        # Thi thoảng (tỷ lệ 8%) đi kiểm tra thông báo
-        if random.random() < 0.08:
-            from actions.read_notifications import read_one_random_notification
-            read_one_random_notification(driver, uid)
 
     print(f"[{uid}] ✅ Hoàn thành warm-up.")

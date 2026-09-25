@@ -35,10 +35,6 @@ def cleanup_seleniumwire(driver):
     """Xóa seleniumwire request log và cache browser"""
     try:
         driver.requests.clear()
-        # Tạm thời tắt dọn cache để debug persistence
-        # driver.execute_cdp_cmd('Network.clearBrowserCache', {})
-        # driver.execute_cdp_cmd('Network.clearBrowserCookies', {}) # Đã xóa để giữ login
-        print("🧼 Đã dọn seleniumwire (Cache/Cookies preserved)")
     except:
         pass
 

@@ -147,6 +147,9 @@
                                 </Border>
                                 <Button Grid.Column="1" Content="Chọn thư mục" Command="{Binding SelectImageFolderCommand}" Background="#1a73e8" Foreground="White" BorderThickness="0" Padding="10,0" Margin="5,0,0,0" Cursor="Hand" Height="28"/>
                             </Grid>
+                            
+                            <CheckBox Content="Bình luận kèm nội dung Text (ngẫu nhiên)" IsChecked="{Binding IsImageCommentWithText}" Margin="0,5,0,0" FontSize="12"/>
+                            
                             <TextBlock Text="Bot sẽ lấy ngẫu nhiên ảnh trong thư mục để bình luận." FontSize="11" Foreground="#888" TextWrapping="Wrap" Margin="0,5,0,0"/>
                         </StackPanel>
 

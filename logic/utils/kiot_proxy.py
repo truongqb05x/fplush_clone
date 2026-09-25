@@ -41,7 +41,6 @@ def get_new_kiot_proxy(key, region="random"):
     
     while True:
         try:
-            print(f"[KiotProxy] Đang lấy proxy mới cho key {key[:10]}...")
             response = requests.get(url, timeout=10)
             data = response.json()
             

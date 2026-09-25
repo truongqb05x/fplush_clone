@@ -18,6 +18,16 @@ from utils.helpers import (
 )
 from actions.like_actions import random_like_post
 
+def close_obstructing_modals(driver, uid):
+    try:
+        close_btns = driver.find_elements(By.XPATH, "//div[@aria-label='Đóng' and @role='button']")
+        for btn in close_btns:
+            if btn.is_displayed():
+                driver.execute_script("arguments[0].click();", btn)
+                time.sleep(1)
+    except Exception:
+        pass
+
 
 def check_comment_status_after_post(driver, uid):
     """
@@ -198,7 +208,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
             try:
                 WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.CSS_SELECTOR, selector)))
                 feed_found = True
-                print(f"[{uid}] ✅ Đã tìm thấy Feed bằng selector: {selector}")
                 break
             except: continue
         
@@ -230,11 +239,13 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                     print(f"[{uid}] 🌟 PHÁT HIỆN GROUP ĐẶC BIỆT! Sử dụng file: {target_content_file}")
             
             is_image_comment = False
+            is_image_comment_with_text = False
             images_dir = "resources/images"
             if task_config:
                 if task_config.get("IsImageComment"):
                     is_image_comment = True
                     images_dir = task_config.get("ImageFolderPath", "resources/images")
+                    is_image_comment_with_text = task_config.get("IsImageCommentWithText", False)
                 else:
                     image_group_uids = task_config.get("ImageGroupUids", [])
                     if image_group_uids:
@@ -303,12 +314,12 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
 
                         # NẾU TÌM THẤY Ô COMMENT -> XỬ LÝ
                         if box_to_comment:
-                            print(f"[{uid}] 🎯 Tìm thấy ô comment trực tiếp!")
                             driver.execute_script("arguments[0].setAttribute('data-commented', 'true')", box_to_comment)
                             
                             delay1 = random.randint(1, 10)
                             time.sleep(delay1)
                             
+                            close_obstructing_modals(driver, uid)
                             random_like_post(driver, uid)
                             
                             delay2 = random.randint(3, 5)
@@ -367,6 +378,11 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                                 # Click và focus vào ô comment để Facebook hiện nút Send (Submit)
                                 driver.execute_script("arguments[0].click(); arguments[0].focus();", comment_input)
                                 time.sleep(2)
+                                
+                                if is_image_comment_with_text and content:
+                                    type_human_like(driver, content, element=comment_input)
+                                    time.sleep(2)
+                                
                                 # images_dir đã được lấy từ task_config ở trên
                                 image_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
                                 available_images = []
@@ -427,7 +443,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                                         time.sleep(1)
                                     if not submitted:
                                         ActionChains(driver).send_keys(Keys.ENTER).perform()
-                                    print(f"[{uid}] ✅ Đã gửi comment ảnh trực tiếp.")
                                     time.sleep(15)
                                 else:
                                     print(f"[{uid}] ❌ Không tìm thấy input ảnh.")
@@ -580,11 +595,13 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
 
         # Xác định chế độ comment ảnh (Image Group logic)
         is_image_comment = False
+        is_image_comment_with_text = False
         images_dir = "resources/images"
         if task_config:
             if task_config.get("IsImageComment"):
                 is_image_comment = True
                 images_dir = task_config.get("ImageFolderPath", "resources/images")
+                is_image_comment_with_text = task_config.get("IsImageCommentWithText", False)
             else:
                 image_group_uids = task_config.get("ImageGroupUids", [])
                 if image_group_uids:
@@ -626,6 +643,7 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
             delay1 = random.randint(1, 10)
             time.sleep(delay1)
             
+            close_obstructing_modals(driver, uid)
             random_like_post(driver, uid)
             
             delay2 = random.randint(3, 5)
@@ -644,6 +662,12 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
 
             if is_image_comment:
                 # === CHẾ ĐỘ COMMENT ẢNH ===
+                if is_image_comment_with_text and content:
+                    driver.execute_script("arguments[0].focus();", comment_input)
+                    time.sleep(1)
+                    type_human_like(driver, content, element=comment_input)
+                    time.sleep(2)
+                    
                 # Bỏ qua hoàn toàn việc click, vì Selenium có thể tương tác trực tiếp với input type=file
                 pass
 
@@ -713,7 +737,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                             if btn.is_displayed():
                                 btn.click()
                                 submitted = True
-                                print(f"[{uid}] ✅ Đã gửi comment ảnh thành công (sau {int(time.time() - start_wait)}s).")
                                 break
                         except: continue
                     if submitted:

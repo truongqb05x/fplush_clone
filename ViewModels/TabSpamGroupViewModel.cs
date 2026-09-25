@@ -76,6 +76,13 @@ namespace FPlusClone.ViewModels
             set { if (_imageFolderPath != value) { _imageFolderPath = value; OnPropertyChanged(); } }
         }
 
+        private bool _isImageCommentWithText;
+        public bool IsImageCommentWithText
+        {
+            get => _isImageCommentWithText;
+            set { if (_isImageCommentWithText != value) { _isImageCommentWithText = value; OnPropertyChanged(); } }
+        }
+
         public System.Collections.ObjectModel.ObservableCollection<CommentModel> CommentsList { get; set; } = new System.Collections.ObjectModel.ObservableCollection<CommentModel>();
 
         private string _newComment;
@@ -318,10 +325,12 @@ namespace FPlusClone.ViewModels
             var fullConfig = new
             {
                 MaxThreads = MaxThreads, // <-- Thêm số luồng
+                MaxCommentsPerAcc = MaxComments, // <-- Truyền số lượng comment
                 GroupUids = GroupUids?.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries).ToList() ?? new System.Collections.Generic.List<string>(),
                 ImageGroupUids = ImageGroupUids?.Split(new[] { '\r', '\n' }, System.StringSplitOptions.RemoveEmptyEntries).ToList() ?? new System.Collections.Generic.List<string>(),
                 IsTextComment = IsTextComment,
                 IsImageComment = IsImageComment,
+                IsImageCommentWithText = IsImageCommentWithText,
                 ImageFolderPath = ImageFolderPath,
                 IsSequentialComment = IsSequentialComment,
                 IsRandomComment = IsRandomComment,

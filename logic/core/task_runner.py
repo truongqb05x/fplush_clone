@@ -112,17 +112,42 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                     # print(f"[{uid}]  [Settings] Sử dụng proxy tĩnh từ cài đặt: {proxy_str}")
             elif proxy_method == 2:  # KiotProxy
                 kiot_key = task_config.get("KiotProxyKey", "")
+                is_reset_dcom = task_config.get("IsResetDcom", False)
+                reset_dcom_after = task_config.get("ResetDcomAfter", 2)
                 if kiot_key:
                     kiot_proxy_str = None
                     with KIOT_PROXY_LOCK:
                         cached = KIOT_PROXY_CACHE.get(kiot_key)
-                        if cached and cached.get("cycle") == cycle_count:
-                            kiot_proxy_str = cached.get("proxy")
-                            # print(f"[{uid}]  [Settings] Dùng proxy Kiot cache: {kiot_key[:10]}...")
+                        need_new = False
+                        
+                        if not cached:
+                            need_new = True
                         else:
+                            if not is_reset_dcom:
+                                need_new = False
+                            else:
+                                if cached.get("last_turn") != cycle_count:
+                                    turns_used = cached.get("turns_used", 1)
+                                    if turns_used >= reset_dcom_after:
+                                        need_new = True
+                                    else:
+                                        cached["last_turn"] = cycle_count
+                                        cached["turns_used"] = turns_used + 1
+                                        need_new = False
+                                else:
+                                    need_new = False
+
+                        if need_new:
                             kiot_proxy_str = get_new_kiot_proxy(kiot_key)
                             if kiot_proxy_str:
-                                KIOT_PROXY_CACHE[kiot_key] = {"proxy": kiot_proxy_str, "cycle": cycle_count}
+                                KIOT_PROXY_CACHE[kiot_key] = {
+                                    "proxy": kiot_proxy_str, 
+                                    "last_turn": cycle_count,
+                                    "turns_used": 1
+                                }
+                        else:
+                            kiot_proxy_str = cached.get("proxy") if cached else None
+
                     if kiot_proxy_str:
                         proxy_config = parse_kiot_proxy_string(kiot_proxy_str)
                         proxy_str = kiot_proxy_str
@@ -143,13 +168,42 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                 kiot_proxy_str = None
                 with KIOT_PROXY_LOCK:
                     cached = KIOT_PROXY_CACHE.get(assigned_kiot_key)
-                    if cached and cached.get("cycle") == cycle_count:
-                        kiot_proxy_str = cached.get("proxy")
-                        print(f"[{uid}]  Dùng chung proxy Kiot đã lấy cho key {assigned_kiot_key[:10]} (Turn {cycle_count})")
+                    
+                    is_reset_dcom = False
+                    reset_dcom_after = 2
+                    if task_config:
+                        is_reset_dcom = task_config.get("IsResetDcom", False)
+                        reset_dcom_after = task_config.get("ResetDcomAfter", 2)
+                        
+                    need_new = False
+                    if not cached:
+                        need_new = True
                     else:
+                        if not is_reset_dcom:
+                            need_new = False
+                        else:
+                            if cached.get("last_turn") != cycle_count:
+                                turns_used = cached.get("turns_used", 1)
+                                if turns_used >= reset_dcom_after:
+                                    need_new = True
+                                else:
+                                    cached["last_turn"] = cycle_count
+                                    cached["turns_used"] = turns_used + 1
+                                    need_new = False
+                            else:
+                                need_new = False
+
+                    if need_new:
                         kiot_proxy_str = get_new_kiot_proxy(assigned_kiot_key)
                         if kiot_proxy_str:
-                            KIOT_PROXY_CACHE[assigned_kiot_key] = {"proxy": kiot_proxy_str, "cycle": cycle_count}
+                            KIOT_PROXY_CACHE[assigned_kiot_key] = {
+                                "proxy": kiot_proxy_str, 
+                                "last_turn": cycle_count,
+                                "turns_used": 1
+                            }
+                    else:
+                        kiot_proxy_str = cached.get("proxy") if cached else None
+                        print(f"[{uid}]  Dùng chung proxy Kiot đã lấy cho key {assigned_kiot_key[:10]} (Turn {cycle_count})")
 
                 if kiot_proxy_str:
                     proxy_config = parse_kiot_proxy_string(kiot_proxy_str)
@@ -173,13 +227,42 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                     kiot_proxy_str = None
                     with KIOT_PROXY_LOCK:
                         cached = KIOT_PROXY_CACHE.get(assigned_kiot_key)
-                        if cached and cached.get("cycle") == cycle_count:
-                            kiot_proxy_str = cached.get("proxy")
-                            print(f"[{uid}]  Dùng chung proxy Kiot đã lấy cho key {assigned_kiot_key[:10]} (Turn {cycle_count})")
+                        
+                        is_reset_dcom = False
+                        reset_dcom_after = 2
+                        if task_config:
+                            is_reset_dcom = task_config.get("IsResetDcom", False)
+                            reset_dcom_after = task_config.get("ResetDcomAfter", 2)
+                            
+                        need_new = False
+                        if not cached:
+                            need_new = True
                         else:
+                            if not is_reset_dcom:
+                                need_new = False
+                            else:
+                                if cached.get("last_turn") != cycle_count:
+                                    turns_used = cached.get("turns_used", 1)
+                                    if turns_used >= reset_dcom_after:
+                                        need_new = True
+                                    else:
+                                        cached["last_turn"] = cycle_count
+                                        cached["turns_used"] = turns_used + 1
+                                        need_new = False
+                                else:
+                                    need_new = False
+
+                        if need_new:
                             kiot_proxy_str = get_new_kiot_proxy(assigned_kiot_key)
                             if kiot_proxy_str:
-                                KIOT_PROXY_CACHE[assigned_kiot_key] = {"proxy": kiot_proxy_str, "cycle": cycle_count}
+                                KIOT_PROXY_CACHE[assigned_kiot_key] = {
+                                    "proxy": kiot_proxy_str, 
+                                    "last_turn": cycle_count,
+                                    "turns_used": 1
+                                }
+                        else:
+                            kiot_proxy_str = cached.get("proxy") if cached else None
+                            print(f"[{uid}]  Dùng chung proxy Kiot đã lấy cho key {assigned_kiot_key[:10]} (Turn {cycle_count})")
 
                     if kiot_proxy_str:
                         proxy_config = parse_kiot_proxy_string(kiot_proxy_str)

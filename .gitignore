@@ -5,3 +5,5 @@ resources/
 *.log
 __pycache__/
 *.pyc
+publish_output/
+*.zip

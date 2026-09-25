@@ -1,8 +1,13 @@
 {
   "version": 2,
-  "dgSpecHash": "k9ZzxgXkEbc=",
+  "dgSpecHash": "yevNaMVgZ34=",
   "success": true,
-  "projectFilePath": "d:\\facebook\\Tools\\main\\FPlusClone.csproj",
-  "expectedPackageFiles": [],
+  "projectFilePath": "D:\\facebook\\Tools\\main\\FPlusClone.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\ADMIN\\.nuget\\packages\\microsoft.net.illink.tasks\\9.0.6\\microsoft.net.illink.tasks.9.0.6.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\9.0.6\\microsoft.netcore.app.runtime.win-x64.9.0.6.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\9.0.6\\microsoft.windowsdesktop.app.runtime.win-x64.9.0.6.nupkg.sha512",
+    "C:\\Users\\ADMIN\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\9.0.6\\microsoft.aspnetcore.app.runtime.win-x64.9.0.6.nupkg.sha512"
+  ],
   "logs": []
 }
