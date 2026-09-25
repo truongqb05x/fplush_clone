@@ -41,7 +41,6 @@ def check_comment_status_after_post(driver, uid):
                     ok_btns = driver.find_elements(By.XPATH, "//div[@role='button']//span[text()='OK']")
                     if ok_btns:
                         ok_btns[0].click()
-                        print(f"[{uid}] 🔘 Đã click OK trên modal chặn tính năng.")
                         time.sleep(2)
                 except: pass
                 return "BLOCK_MODAL_DETECTED"
@@ -56,7 +55,6 @@ def check_comment_status_after_post(driver, uid):
         ]
         for sel in membership_selectors:
             if driver.find_elements(By.XPATH, sel):
-                print(f"[{uid}] 🚩 Phát hiện modal 'Xem xét quyền tham gia'. Đang xử lý...")
                 textareas = driver.find_elements(By.TAG_NAME, "textarea")
                 for ta in textareas:
                     try:
@@ -67,14 +65,12 @@ def check_comment_status_after_post(driver, uid):
                 submit_btns = driver.find_elements(By.XPATH, "//div[@aria-label='Gửi' and @role='button']")
                 if submit_btns:
                     submit_btns[0].click()
-                    print(f"[{uid}] ✅ Đã nhấn 'Gửi' modal.")
                     time.sleep(3)
                 return "MEMBERSHIP_MODAL"
     except Exception as e:
         print(f"[{uid}] ⚠️ Lỗi khi xử lý modal thành viên: {e}")
 
     # 3. Kiểm tra nút Chỉnh sửa (comment được duyệt hay bị từ chối)
-    print(f"[{uid}] ⏳ Chờ 10-30s để kiểm tra xem comment có bị từ chối/chờ duyệt hay không...")
     time.sleep(random.uniform(10, 30))
     try:
         menu_xpath = "//div[@aria-label='Chỉnh sửa hoặc xóa bình luận này' or @aria-label='Edit or delete this comment' or @aria-label='Edit or delete this']"
@@ -92,7 +88,6 @@ def check_comment_status_after_post(driver, uid):
                 print(f"[{uid}] ❌ Không có tùy chọn 'Chỉnh sửa'. Comment có thể đã bị từ chối hoặc đang chờ duyệt.")
                 return "BLOCK_EDIT_DETECTED"
             else:
-                print(f"[{uid}] ✅ Tùy chọn 'Chỉnh sửa' vẫn tồn tại (Comment đã hiển thị công khai).")
                 ActionChains(driver).send_keys(Keys.ESCAPE).perform()
                 time.sleep(1)
         else:
@@ -128,7 +123,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
 
         # Truy cập danh sách nhóm đã tham gia
         joins_url = "https://www.facebook.com/groups/joins/?nav_source=tab"
-        print(f"[{uid}]  Truy cập danh sách nhóm đã tham gia...")
         
         # Chuyển hướng bằng DOM click để an toàn và giống người thật hơn
         script_joins = f"""
@@ -140,7 +134,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
         driver.execute_script(script_joins)
         time.sleep(5)
         
-        print(f"[{uid}]  Tìm và click vào nhóm {g_id}...")
         group_clicked = False
         for _ in range(4): # Cuộn vài lần để load thêm nhóm
             try:
@@ -160,7 +153,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
             time.sleep(2)
             
         if not group_clicked:
-            print(f"[{uid}] ⚠️ Không tìm thấy nhóm trong danh sách, điều hướng trực tiếp bằng DOM click...")
             script_target = f"""
                 var a = document.createElement('a');
                 a.href = '{target_url}';
@@ -181,7 +173,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                 driver.execute_script(script_target)
         
         # Đợi modal (nếu có) xuất hiện, thử nhiều lần trong 8 giây
-        print(f"[{uid}] ⏳ Đang kiểm tra modal chào mừng nhóm...")
         modal_closed = False
         for _ in range(4): # Thử 4 lần, mỗi lần chờ 2 giây
             time.sleep(2)
@@ -192,7 +183,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                     if btn.is_displayed():
                         # Dùng JavaScript click để chắc chắn không bị block bởi UI khác
                         driver.execute_script("arguments[0].click();", btn)
-                        print(f"[{uid}] 🔘 Đã đóng modal giới thiệu/chào mừng của nhóm.")
                         modal_closed = True
                         time.sleep(1)
                         break
@@ -202,7 +192,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                 pass
         
         # 1. Đợi feed hiện (nhiều lớp bảo vệ)
-        print(f"[{uid}]  Đang đợi nội dung nhóm hiển thị...")
         feed_selectors = ["div[role='feed']", "div[data-pagelet^='FeedUnit']", "div[aria-label='Nội dung nhúm']", "div[aria-label='Feed of Group']"]
         feed_found = False
         for selector in feed_selectors:
@@ -213,8 +202,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                 break
             except: continue
         
-        if not feed_found:
-            print(f"[{uid}] ⚠️ Không tìm thấy Feed container cụ thể, thử cuộn mù...")
 
         collected_links = set()
         history_file = "resources/commented.txt"
@@ -231,7 +218,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
         
         # --- START DIRECT MODE ---
         if True:
-            print(f"[{uid}] 📜 Sử dụng chiến lược: lướt và tìm trực tiếp ô comment...")
             
             target_content_file = "resources/edit_stt.txt"
             special_groups_file = "resources/special_groups.txt"
@@ -296,16 +282,12 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                             for btn in comment_btns:
                                 if btn.is_displayed():
                                     try:
-                                        print(f"[{uid}] 🔧 [DEBUG] Đang cuộn đến nút Bình luận...")
                                         driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", btn)
                                         time.sleep(1)
                                     except:
-                                        print(f"[{uid}] 🔧 [DEBUG] Không thể cuộn đến nút Bình luận, bỏ qua cuộn.")
                                         pass
-                                    print(f"[{uid}] 🔧 [DEBUG] Bắt đầu click nút Bình luận...")
                                     driver.execute_script("arguments[0].setAttribute('data-scanned', 'true')", btn)
                                     driver.execute_script("arguments[0].click();", btn)
-                                    print(f"[{uid}] 🔧 [DEBUG] Đã click nút Bình luận, đợi 2s...")
                                     time.sleep(2)
                                     break # Chỉ click 1 nút rồi kiểm tra lại
                             
@@ -325,27 +307,22 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                             driver.execute_script("arguments[0].setAttribute('data-commented', 'true')", box_to_comment)
                             
                             delay1 = random.randint(1, 10)
-                            print(f"[{uid}] ⏳ Đợi {delay1}s trước khi thả cảm xúc...")
                             time.sleep(delay1)
                             
                             random_like_post(driver, uid)
                             
                             delay2 = random.randint(3, 5)
-                            print(f"[{uid}] ⏳ Đợi {delay2}s trước khi bình luận...")
                             time.sleep(delay2)
                             
                             comment_input = box_to_comment
                                 
                             # Cuộn ô comment ra giữa màn hình để tránh bị che bởi header/footer và click nhầm vào sticker
                             try:
-                                print(f"[{uid}] 🔧 [DEBUG] Đang cuộn ô comment ra giữa màn hình...")
                                 driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", comment_input)
                                 time.sleep(1)
                                 driver.execute_script("window.scrollBy(0, 100);")
                                 time.sleep(1)
-                                print(f"[{uid}] 🔧 [DEBUG] Đã cuộn ô comment xong.")
                             except:
-                                print(f"[{uid}] 🔧 [DEBUG] Lỗi khi cuộn ô comment, bỏ qua.")
                                 pass
                             
                             if task_config:
@@ -369,13 +346,11 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                                         stt_lines = read_file("resources/stt.txt")
                                     content = random.choice(stt_lines) if stt_lines else "Up bài giúp b nhé"
                             
-                            print(f"[{uid}] ✍️ Đang xử lý comment...")
                             time.sleep(random.uniform(2, 5))
                             
                             # --- PERMALINK FALLBACK LOGIC ---
                             current_url = driver.current_url
                             if "/permalink/" in current_url or "/posts/" in current_url or "story_fbid=" in current_url:
-                                print(f"[{uid}] ⚠️ Phát hiện URL tự động chuyển sang trang bài viết riêng lẻ. Áp dụng logic lưu ID tránh trùng...")
                                 m = re.search(r"(?:\/posts\/|\/permalink\/|story_fbid=)(\d+)", current_url)
                                 if m:
                                     pid = m.group(1)
@@ -383,16 +358,13 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                                         print(f"[{uid}] ⏭️ Bỏ qua {pid} vì đã comment trước đó.")
                                         return False
                                     else:
-                                        print(f"[{uid}] ⭐ Xác nhận bài viết mới: {pid}")
                                         collected_links.add(current_url)
                                         is_permalink_fallback = True
                                         break
                             # ---------------------------------
                             
                             if is_image_comment:
-                                print(f"[{uid}] 🔧 [DEBUG] Chuẩn bị xử lý comment ảnh...")
                                 # Click và focus vào ô comment để Facebook hiện nút Send (Submit)
-                                print(f"[{uid}] 🔧 [DEBUG] Đang click/focus ô comment để gọi UI nút Submit...")
                                 driver.execute_script("arguments[0].click(); arguments[0].focus();", comment_input)
                                 time.sleep(2)
                                 # images_dir đã được lấy từ task_config ở trên
@@ -434,9 +406,7 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                                     except: pass
                                 
                                 if file_input:
-                                    print(f"[{uid}] 🔧 [DEBUG] Đã tìm thấy input file, tiến hành gửi ảnh...")
                                     file_input.send_keys(chosen_image)
-                                    print(f"[{uid}] 🔧 [DEBUG] Đã đẩy ảnh vào DOM, chờ tối đa 30s cho Facebook xử lý upload và bật nút Đăng bình luận...")
                                     submitted = False
                                     start_wait = time.time()
                                     while time.time() - start_wait < 30:
@@ -448,17 +418,14 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                                             try:
                                                 btn = driver.find_element(By.XPATH, submit_xpath)
                                                 if btn.is_displayed():
-                                                    print(f"[{uid}] 🔧 [DEBUG] Tìm thấy nút submit sau {int(time.time() - start_wait)}s, chuẩn bị click...")
                                                     btn.click()
                                                     submitted = True
-                                                    print(f"[{uid}] 🔧 [DEBUG] Đã click nút submit.")
                                                     break
                                             except: continue
                                         if submitted:
                                             break
                                         time.sleep(1)
                                     if not submitted:
-                                        print(f"[{uid}] 🔧 [DEBUG] Không thể click nút submit, thử gửi phím ENTER thay thế...")
                                         ActionChains(driver).send_keys(Keys.ENTER).perform()
                                     print(f"[{uid}] ✅ Đã gửi comment ảnh trực tiếp.")
                                     time.sleep(15)
@@ -466,14 +433,10 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                                     print(f"[{uid}] ❌ Không tìm thấy input ảnh.")
                                     return False
                             else:
-                                print(f"[{uid}] 🔧 [DEBUG] Bắt đầu gõ comment text...")
                                 # Chỉ focus phần tử qua JS, sau đó gõ phím trực tiếp vào phần tử đó, bỏ qua click chuột!
-                                print(f"[{uid}] 🔧 [DEBUG] Click/focus ô comment bằng JS...")
                                 driver.execute_script("arguments[0].click(); arguments[0].focus();", comment_input)
                                 time.sleep(1)
-                                print(f"[{uid}] 🔧 [DEBUG] Đang gõ chữ giả lập...")
                                 type_human_like(driver, content, element=None)
-                                print(f"[{uid}] 🔧 [DEBUG] Gõ xong, gửi phím ENTER...")
                                 ActionChains(driver).send_keys(Keys.ENTER).perform()
                                 print(f"[{uid}] ✅ Đã gửi comment text trực tiếp.")
                                 time.sleep(5)
@@ -510,17 +473,14 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                 driver.refresh()
                 time.sleep(10)
 
-            print(f"[{uid}] 📜 Bắt đầu cuộn và quét bài viết (Lần thử {attempt + 1}/2)...")
             consecutive_skip_count = 0
             for scan_idx in range(20): # Thử 20 lần cuộn
                 # Cuộn xuống
                 scroll_dist = random.randint(400, 600)
                 driver.execute_script(f"window.scrollBy(0, {scroll_dist});")
-                print(f"[{uid}]   ⬇️ Đã cuộn xuống {scroll_dist}px (Lần {scan_idx+1}/20)...")
                 time.sleep(4) # Chờ load content
                 
                 candidates = driver.find_elements(By.CSS_SELECTOR, 'a[role="link"]:not([data-scanned="true"])')
-                print(f"[{uid}]   🔍 Tìm thấy {len(candidates)} link tiềm năng trên màn hình.")
                 
                 for cand in candidates:
                     try:
@@ -559,13 +519,11 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                                     is_young = False
                             
                             if not is_young:
-                                print(f"[{uid}]     ⏩ Bỏ qua bài quá cũ (>24h): {text[:30]}...")
-                                print(f"[{uid}] 🛑 Phát hiện bài viết cũ. Lập tức chuyển sang group khác.")
+                                print(f"[{uid}] 🛑 Bài viết cũ (>24h). Chuyển group khác.")
                                 return False
 
                             is_first_post_evaluated = False
                             driver.execute_script("arguments[0].setAttribute('data-scanned', 'true')", cand)
-                            print(f"[{uid}]     🔗 Phù hợp: {text[:20]}... (URL: {href[:40]})")
                             
                             # Click new tab
                             ActionChains(driver).key_down(Keys.CONTROL).click(cand).key_up(Keys.CONTROL).perform()
@@ -585,8 +543,7 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                                 if m:
                                     pid = m.group(1)
                                     if pid not in commented_ids:
-                                        print(f"[{uid}] ⭐ THÀNH CÔNG: Tìm thấy bài viết chưa comment: {pid}")
-                                        consecutive_skip_count = 0 # Reset khi tìm thấy bài mới
+                                        consecutive_skip_count = 0
                                         collected_links.add(real_url)
                                         break
                                     else:
@@ -595,8 +552,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                                         if consecutive_skip_count >= 10:
                                             print(f"[{uid}] 🛑 Đã bỏ qua liên tiếp {consecutive_skip_count} bài viết. Dừng account này.")
                                             return "STOP_ACCOUNT"
-                                else:
-                                    print(f"[{uid}] ⚠️ Link không phải permalink bài viết: {real_url[:50]}")
                     except Exception:
                         pass
                 
@@ -658,29 +613,24 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
             if os.path.exists(target_content_file):
                 with open(target_content_file, "r", encoding="utf-8-sig") as f:
                     content = f.read().strip()
-            print(f"[{uid}] 📝 Chế độ No-Edit: Sử dụng nội dung từ {target_content_file}")
         else:
             # Nếu có edit, lấy ngẫu nhiên từ stt.txt như cũ
             with FILE_LOCK:
                 stt_lines = read_file("resources/stt.txt")
             content = random.choice(stt_lines) if stt_lines else "Up bài giúp b nhé"
-            print(f"[{uid}] 📝 Chế độ Edit: Sử dụng nội dung ngẫu nhiên từ stt.txt")
 
 
         textbox_xpath = '//div[@role="textbox"]'
         comment_input = wait_for_element_with_retry(driver, By.XPATH, textbox_xpath, timeout=15)
         if comment_input:
             delay1 = random.randint(1, 10)
-            print(f"[{uid}] ⏳ Đợi {delay1}s trước khi thả cảm xúc...")
             time.sleep(delay1)
             
             random_like_post(driver, uid)
             
             delay2 = random.randint(3, 5)
-            print(f"[{uid}] ⏳ Đợi {delay2}s trước khi bình luận...")
             time.sleep(delay2)
             
-            print(f"[{uid}] ✍️ Đang xử lý comment...")
             time.sleep(random.uniform(5, 10))
             
             # Cuộn trang xuống giữa màn hình và thêm 100px để tránh che khuất footer
@@ -724,7 +674,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                         "//div[@aria-label='Đính kèm một ảnh hoặc video' or @aria-label='Attach a photo or video']/ancestor::li//input[@type='file']"
                     )
                     file_input = attach_btn
-                    print(f"[{uid}] 📎 Tìm thấy input file qua nút 'Đính kèm ảnh'.")
                 except Exception:
                     pass
 
@@ -734,7 +683,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                         els = driver.find_elements(By.CSS_SELECTOR, "#focused-state-actions-list input[type='file']")
                         if els:
                             file_input = els[0]
-                            print(f"[{uid}] 📎 Tìm thấy input file trong #focused-state-actions-list.")
                     except Exception:
                         pass
 
@@ -744,7 +692,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                         els = driver.find_elements(By.CSS_SELECTOR, "form[role='presentation'] input[type='file']")
                         if els:
                             file_input = els[0]
-                            print(f"[{uid}] 📎 Tìm thấy input file trong form comment.")
                     except Exception:
                         pass
 
@@ -753,7 +700,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                     return False
 
                 file_input.send_keys(chosen_image)
-                print(f"[{uid}]  Đang chờ ảnh upload hoàn tất và quét nút đăng bình luận (tối đa 30s)...")
                 submitted = False
                 start_wait = time.time()
                 while time.time() - start_wait < 30:
@@ -834,7 +780,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                         with open(target_content_file, "r", encoding="utf-8-sig") as f:
                             new_content = f.read().strip()
                     
-                    print(f"[{uid}] ✍️ Sửa thành nội dung từ {target_content_file}...")
                     type_human_like(driver, new_content, element=box)
                     time.sleep(1)
                     box.send_keys(Keys.ENTER)
@@ -842,11 +787,6 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
                     time.sleep(3)
                 except Exception as e_edit:
                     print(f"[{uid}] ⚠️ Lỗi quy trình sửa comment: {e_edit}")
-            else:
-                if is_image_comment:
-                    print(f"[{uid}] ⏩ Bỏ qua bước sửa comment (Chế độ Comment Ảnh - không hỗ trợ edit).")
-                else:
-                    print(f"[{uid}] ⏩ Bỏ qua bước sửa comment (Chế độ No-Edit).")
             # ===========================================================
 
             # Save history với Lock

@@ -609,6 +609,22 @@ namespace FPlusClone.ViewModels
         }
 
         /// <summary>
+        /// Cập nhật Note của tài khoản theo UID và lưu file.
+        /// Nếu Note đã có nội dung thì append, không ghi đè.
+        /// </summary>
+        public void UpdateAccountNote(string uid, string noteText)
+        {
+            var acc = Accounts.FirstOrDefault(a => a.Uid == uid);
+            if (acc == null) return;
+            var timestamp = System.DateTime.Now.ToString("dd/MM/yy HH:mm");
+            var newEntry = $"[{timestamp}] {noteText}";
+            acc.Note = string.IsNullOrWhiteSpace(acc.Note)
+                ? newEntry
+                : acc.Note + " | " + newEntry;
+            SaveAccounts();
+        }
+
+        /// <summary>
         /// Lưu danh sách tài khoản bị xóa vào file backup riêng (append, không ghi đè).
         /// Mỗi bản ghi kèm thời điểm xóa và lý do để dễ khôi phục.
         /// </summary>

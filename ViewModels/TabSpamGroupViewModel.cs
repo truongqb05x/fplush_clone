@@ -407,6 +407,21 @@ namespace FPlusClone.ViewModels
                                     acc.Status = "Die";
                                 }
                             }
+                            
+                            // Check for UI_REMOVE|<uid> — xóa account khỏi list chờ chạy
+                            var removeMatch = System.Text.RegularExpressions.Regex.Match(e.Data, @"\[(.*?)\]\s*UI_REMOVE\|(.+)");
+                            if (removeMatch.Success)
+                            {
+                                string uidStr = removeMatch.Groups[2].Value.Trim();
+                                var acc = TaskAccounts.FirstOrDefault(a => a.Account.Uid == uidStr);
+                                if (acc != null)
+                                {
+                                    TaskAccounts.Remove(acc);
+                                    // Cập nhật Note trong danh sách tài khoản gốc
+                                    var mainVm = System.Windows.Application.Current.MainWindow?.DataContext as MainViewModel;
+                                    mainVm?.UpdateAccountNote(uidStr, "Pending comment (bị từ chối/chờ duyệt)");
+                                }
+                            }
                         });
                     }
                 };

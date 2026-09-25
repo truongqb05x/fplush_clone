@@ -87,22 +87,20 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
             "contains(@aria-label, 'Nhắn tin'))]"
         )
 
-        # Truy cập profile target
-        driver.get(f"https://www.facebook.com/{target_uid}")
-        time.sleep(random.randint(5, 8))
+        # ─── BƯỚC 1: Truy cập và Kiểm tra trạng thái bạn bè ───
+        action_success = False
+        if is_sender:
+            for attempt in range(3):
+                driver.get(f"https://www.facebook.com/{target_uid}")
+                time.sleep(random.randint(5, 8))
 
-        # ─── BƯỚC 1: Kiểm tra trạng thái bạn bè ───
-        is_friends = driver.find_elements(By.XPATH, friends_xpath)
+                is_friends = driver.find_elements(By.XPATH, friends_xpath)
+                if is_friends:
+                    print(f"[{uid}] ℹ️ Đã là bạn bè với {target_uid}.")
+                    sync['sender_added'].set()
+                    action_success = True
+                    break
 
-        if is_friends:
-            print(f"[{uid}] ℹ️ Đã là bạn bè với {target_uid}.")
-            if is_sender:
-                sync['sender_added'].set()
-            else:
-                sync['receiver_accepted'].set()
-        else:
-            if is_sender:
-                # Sender: gửi lời mời hoặc phát hiện đã gửi
                 cancel_xpath = (
                     "//div[starts-with(@aria-label, 'Cancel Request') or "
                     "starts-with(@aria-label, 'Cancel request') or "
@@ -110,21 +108,126 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
                 )
                 if driver.find_elements(By.XPATH, cancel_xpath):
                     print(f"[{uid}] ℹ️ Đã gửi lời mời kết bạn từ trước.")
-                else:
-                    add_xpath = (
-                        "//div[starts-with(@aria-label, 'Add Friend') or "
-                        "starts-with(@aria-label, 'Thêm bạn bè') or "
-                        "starts-with(@aria-label, 'Kết bạn với')]"
-                    )
-                    add_btns = driver.find_elements(By.XPATH, add_xpath)
-                    if add_btns:
-                        driver.execute_script("arguments[0].click();", add_btns[0])
-                        print(f"[{uid}] 👥 Đã nhấn Kết bạn → {target_uid}. Chờ 10s...")
-                        time.sleep(10)
-                    else:
-                        print(f"[{uid}] ⚠️ Không tìm thấy nút Kết bạn. Bỏ qua...")
-                sync['sender_added'].set()
+                    sync['sender_added'].set()
+                    action_success = True
+                    break
 
+                add_xpath = (
+                    "//div["
+                    "starts-with(@aria-label, 'Add Friend') or "
+                    "starts-with(@aria-label, 'Thêm bạn bè') or "
+                    "starts-with(@aria-label, 'Kết bạn với') or "
+                    ".//span[normalize-space()='Thêm bạn bè']"
+                    "]"
+                )
+                add_btns = driver.find_elements(By.XPATH, add_xpath)
+                if add_btns:
+                    add_btn = add_btns[0]
+
+                    try:
+                        # Đưa nút vào vùng nhìn thấy trước khi click
+                        driver.execute_script(
+                            "arguments[0].scrollIntoView({block: 'center'});",
+                            add_btn
+                        )
+                        time.sleep(0.5)
+
+                        # Ưu tiên click bằng Selenium
+                        add_btn.click()
+
+                    except Exception:
+                        # Selenium click thất bại thì mới fallback sang JS click
+                        try:
+                            driver.execute_script(
+                                "arguments[0].click();",
+                                add_btn
+                            )
+                        except Exception as click_error:
+                            print(
+                                f"[{uid}] ⚠️ Không thể click nút Kết bạn: "
+                                f"{click_error}"
+                            )
+                            continue
+
+                    print(
+                        f"[{uid}] 👥 Đã thực hiện click Kết bạn → "
+                        f"{target_uid}. Đang xác minh..."
+                    )
+
+                    # Không đánh dấu thành công chỉ vì click không báo lỗi.
+                    # Xác minh Facebook đã đổi sang trạng thái "Hủy lời mời".
+                    try:
+                        WebDriverWait(driver, 10).until(
+                            lambda d: len(
+                                d.find_elements(
+                                    By.XPATH,
+                                    cancel_xpath
+                                )
+                            ) > 0
+                        )
+
+                        print(
+                            f"[{uid}] ✅ Đã xác nhận lời mời kết bạn "
+                            f"đã được gửi → {target_uid}."
+                        )
+
+                        sync['sender_added'].set()
+                        action_success = True
+                        break
+
+                    except Exception:
+                        print(
+                            f"[{uid}] ⚠️ Click xong nhưng chưa thấy "
+                            f"trạng thái 'Hủy lời mời'. Refresh kiểm tra..."
+                        )
+
+                        # Refresh để lấy lại trạng thái thật từ Facebook
+                        try:
+                            driver.refresh()
+                            time.sleep(random.randint(4, 6))
+
+                            if driver.find_elements(
+                                By.XPATH,
+                                cancel_xpath
+                            ):
+                                print(
+                                    f"[{uid}] ✅ Sau khi refresh: "
+                                    f"lời mời đã được gửi → {target_uid}."
+                                )
+
+                                sync['sender_added'].set()
+                                action_success = True
+                                break
+
+                        except Exception as refresh_error:
+                            print(
+                                f"[{uid}] ⚠️ Lỗi khi refresh kiểm tra: "
+                                f"{refresh_error}"
+                            )
+
+                        print(
+                            f"[{uid}] 🔄 Chưa xác nhận được lời mời. "
+                            f"Sẽ thử lại..."
+                        )
+
+                else:
+                    print(
+                        f"[{uid}] ⚠️ Không tìm thấy nút Kết bạn "
+                        f"(lần {attempt + 1}). Thử lại..."
+                    )
+            
+            if not action_success:
+                print(f"[{uid}] ❌ Bỏ qua vì không thể gửi kết bạn sau 3 lần thử.")
+                return
+
+        else:
+            driver.get(f"https://www.facebook.com/{target_uid}")
+            time.sleep(random.randint(5, 8))
+
+            is_friends = driver.find_elements(By.XPATH, friends_xpath)
+            if is_friends:
+                print(f"[{uid}] ℹ️ Đã là bạn bè với {target_uid}.")
+                sync['receiver_accepted'].set()
             else:
                 # Receiver: chờ sender add rồi mới confirm
                 print(f"[{uid}] ⏳ Chờ {target_uid} gửi lời mời kết bạn (tối đa 2 phút)...")

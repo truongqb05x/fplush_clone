@@ -450,6 +450,7 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
             
             if result == "BLOCK_EDIT_DETECTED":
                 print(f"[{uid}]  Phát hiện comment bị từ chối/chờ duyệt. Xóa khỏi danh sách tài khoản được chọn trong UI chạy...")
+                print(f"[{uid}] UI_REMOVE|{uid}")  # Tín hiệu để C# xóa account khỏi list chờ trong UI
                 # Không gọi remove_dead_account(cookie_line) để không xóa trong file
                 BLOCKED_ACCOUNTS.add(uid)
                 found_and_commented = False
