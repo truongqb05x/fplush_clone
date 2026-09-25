@@ -98,9 +98,9 @@
                                     <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <Border BorderBrush="#dadce0" BorderThickness="1" Background="#fafbfc">
-                                    <TextBox Text="{Binding NewComment, UpdateSourceTrigger=PropertyChanged}" Padding="5" BorderThickness="0" Background="Transparent" Height="28"/>
+                                    <TextBox Text="{Binding NewComment, UpdateSourceTrigger=PropertyChanged}" Padding="5" BorderThickness="0" Background="Transparent" Height="60" AcceptsReturn="True" TextWrapping="Wrap"/>
                                 </Border>
-                                <Button Grid.Column="1" Content="Thêm" Command="{Binding AddCommentCommand}" Background="#1a73e8" Foreground="White" BorderThickness="0" Padding="10,0" Margin="5,0,0,0" Cursor="Hand" Height="28"/>
+                                <Button Grid.Column="1" Content="Thêm" Command="{Binding AddCommentCommand}" Background="#1a73e8" Foreground="White" BorderThickness="0" Padding="10,0" Margin="5,0,0,0" Cursor="Hand" Height="60"/>
                             </Grid>
                             
                             <Border BorderBrush="#dadce0" BorderThickness="1" Background="#fafbfc" Height="150">
@@ -126,8 +126,14 @@
                                                 </Style>
                                             </DataGridTextColumn.ElementStyle>
                                         </DataGridTextColumn>
-                                        <DataGridTextColumn Header="Nội dung" Binding="{Binding Content}" Width="*" IsReadOnly="True"/>
-                                    </DataGrid.Columns>
+                                        <DataGridTextColumn Header="Nội dung" Binding="{Binding Content}" Width="*" IsReadOnly="True">
+                                            <DataGridTextColumn.ElementStyle>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="TextWrapping" Value="Wrap"/>
+                                                    <Setter Property="Padding" Value="2"/>
+                                                </Style>
+                                            </DataGridTextColumn.ElementStyle>
+                                        </DataGridTextColumn>                                    </DataGrid.Columns>
                                 </DataGrid>
                             </Border>
 

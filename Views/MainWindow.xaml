@@ -31,15 +31,6 @@
             <RowDefinition Height="Auto"/> <!-- Footer -->
         </Grid.RowDefinitions>
 
-        <!-- Top Status Bar -->
-        <Border Grid.Row="0" Background="#f8f9fa" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1" Padding="10,5">
-            <DockPanel>
-                <Rectangle Fill="{DynamicResource PrimaryBlueBrush}" Width="24" Height="24" RadiusX="12" RadiusY="12" DockPanel.Dock="Left" Margin="0,0,5,0"/>
-                <Button Content="🔑" Command="{Binding ToggleDebugConsoleCommand}" ToolTip="Mở debug print" Background="Transparent" BorderThickness="0" FontSize="14" VerticalAlignment="Center" Margin="0,0,10,0"/>
-                <TextBlock Text="Facebook Manager" VerticalAlignment="Center" FontWeight="Bold" Foreground="#1877f2" FontSize="16"/>
-
-            </DockPanel>
-        </Border>
 
         <!-- Main Navigation -->
         <Border Grid.Row="1" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,0,0,1">
@@ -765,7 +756,7 @@
         <!-- Footer -->
         <Border Grid.Row="5" Background="#f1f3f4" BorderBrush="{StaticResource BorderBrush}" BorderThickness="0,1,0,0" Padding="10,2">
             <DockPanel>
-                <TextBlock Text="Hỗ trợ: 090.173.1871 | Plus24h.com" VerticalAlignment="Center"/>
+                <TextBlock Text="Hỗ trợ: 1111.1111.111 | 1111.com" VerticalAlignment="Center"/>
                 <TextBlock Text="Version 4.9.0.7" DockPanel.Dock="Right" VerticalAlignment="Center"/>
             </DockPanel>
         </Border>
