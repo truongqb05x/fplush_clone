@@ -75,9 +75,12 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
         sync = _get_chat_sync(uid, target_uid)
 
         friends_xpath = (
-            "//div[starts-with(@aria-label, 'Bạn bè') or "
+            "//*["
+            "(@role='button' or @role='combobox') and ("
+            "starts-with(@aria-label, 'Bạn bè') or "
             "starts-with(@aria-label, 'Friends') or "
-            "contains(@aria-label, 'Bạn bè')]"
+            "contains(@aria-label, 'Bạn bè')"
+            ")]"
         )
         chat_box_xpath = (
             "//div[@role='textbox' and ("
@@ -88,11 +91,37 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
         )
 
         # ─── BƯỚC 1: Truy cập và Kiểm tra trạng thái bạn bè ───
+        cancel_xpath = (
+            "//div[starts-with(@aria-label, 'Cancel Request') or "
+            "starts-with(@aria-label, 'Cancel request') or "
+            "starts-with(@aria-label, 'Hủy lời mời')]"
+        )
+        add_xpath = (
+            "//*["
+            "@role='button' and ("
+            "starts-with(@aria-label, 'Add Friend') or "
+            "starts-with(@aria-label, 'Thêm bạn bè') or "
+            "starts-with(@aria-label, 'Kết bạn với') or "
+            ".//span[normalize-space()='Thêm bạn bè']"
+            ")]"
+        )
+
         action_success = False
         if is_sender:
             for attempt in range(3):
                 driver.get(f"https://www.facebook.com/{target_uid}")
-                time.sleep(random.randint(5, 8))
+                
+                # Chờ trang load xong trạng thái bạn bè (tối đa 20s)
+                try:
+                    WebDriverWait(driver, 20).until(
+                        lambda d: d.find_elements(By.XPATH, friends_xpath) or 
+                                  d.find_elements(By.XPATH, cancel_xpath) or 
+                                  d.find_elements(By.XPATH, add_xpath)
+                    )
+                except Exception:
+                    pass # Hết thời gian chờ, chạy tiếp để loop dưới tự retry
+                    
+                time.sleep(random.randint(2, 4)) # Nghỉ thêm một chút cho DOM hoàn tất
 
                 is_friends = driver.find_elements(By.XPATH, friends_xpath)
                 if is_friends:
@@ -101,28 +130,22 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
                     action_success = True
                     break
 
-                cancel_xpath = (
-                    "//div[starts-with(@aria-label, 'Cancel Request') or "
-                    "starts-with(@aria-label, 'Cancel request') or "
-                    "starts-with(@aria-label, 'Hủy lời mời')]"
-                )
                 if driver.find_elements(By.XPATH, cancel_xpath):
                     print(f"[{uid}] ℹ️ Đã gửi lời mời kết bạn từ trước.")
                     sync['sender_added'].set()
                     action_success = True
                     break
 
-                add_xpath = (
-                    "//div["
-                    "starts-with(@aria-label, 'Add Friend') or "
-                    "starts-with(@aria-label, 'Thêm bạn bè') or "
-                    "starts-with(@aria-label, 'Kết bạn với') or "
-                    ".//span[normalize-space()='Thêm bạn bè']"
-                    "]"
-                )
                 add_btns = driver.find_elements(By.XPATH, add_xpath)
                 if add_btns:
                     add_btn = add_btns[0]
+                    for btn in add_btns:
+                        try:
+                            if btn.is_displayed():
+                                add_btn = btn
+                                break
+                        except Exception:
+                            pass
 
                     try:
                         # Đưa nút vào vùng nhìn thấy trước khi click
@@ -130,24 +153,19 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
                             "arguments[0].scrollIntoView({block: 'center'});",
                             add_btn
                         )
-                        time.sleep(0.5)
+                        time.sleep(1)
 
-                        # Ưu tiên click bằng Selenium
-                        add_btn.click()
-
-                    except Exception:
-                        # Selenium click thất bại thì mới fallback sang JS click
                         try:
-                            driver.execute_script(
-                                "arguments[0].click();",
-                                add_btn
-                            )
-                        except Exception as click_error:
-                            print(
-                                f"[{uid}] ⚠️ Không thể click nút Kết bạn: "
-                                f"{click_error}"
-                            )
-                            continue
+                            add_btn.click()
+                        except:
+                            driver.execute_script("arguments[0].click();", add_btn)
+
+                    except Exception as click_error:
+                        print(
+                            f"[{uid}] ⚠️ Không thể click nút Kết bạn: "
+                            f"{click_error}"
+                        )
+                        continue
 
                     print(
                         f"[{uid}] 👥 Đã thực hiện click Kết bạn → "
@@ -221,39 +239,45 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
                 return
 
         else:
+            # Receiver: chờ sender xử lý (kiểm tra bạn bè hoặc gửi lời mời) trước
+            print(f"[{uid}] ⏳ Đang chờ {target_uid} gửi lời mời kết bạn (tối đa 2 phút)...")
+            sync['sender_added'].wait(timeout=120)
+
+            # Sau khi sender đã gửi xong, receiver mới bắt đầu vào tường của sender
+            print(f"[{uid}] 🌐 Đã nhận tín hiệu từ Sender. Đang truy cập tường {target_uid}...")
             driver.get(f"https://www.facebook.com/{target_uid}")
             time.sleep(random.randint(5, 8))
 
-            is_friends = driver.find_elements(By.XPATH, friends_xpath)
-            if is_friends:
-                print(f"[{uid}] ℹ️ Đã là bạn bè với {target_uid}.")
-                sync['receiver_accepted'].set()
-            else:
-                # Receiver: chờ sender add rồi mới confirm
-                print(f"[{uid}] ⏳ Chờ {target_uid} gửi lời mời kết bạn (tối đa 2 phút)...")
-                sync['sender_added'].wait(timeout=120)
+            for attempt in range(3):
+                # Luôn kiểm tra lại trạng thái bạn bè trước (vì có thể load lần đầu bị trượt)
+                is_friends = driver.find_elements(By.XPATH, friends_xpath)
+                if is_friends:
+                    print(f"[{uid}] ℹ️ Đã là bạn bè với {target_uid}.")
+                    sync['receiver_accepted'].set()
+                    break
 
-                print(f"[{uid}] 🔍 Kiểm tra lời mời kết bạn...")
+                print(f"[{uid}] 🔍 Kiểm tra nút Xác nhận lời mời kết bạn (lần {attempt+1})...")
                 confirm_xpath = (
                     "//div[starts-with(@aria-label, 'Xác nhận lời mời') or "
                     "starts-with(@aria-label, 'Confirm')]"
                 )
-                for attempt in range(3):
-                    confirm_btns = driver.find_elements(By.XPATH, confirm_xpath)
-                    if confirm_btns:
-                        driver.execute_script("arguments[0].click();", confirm_btns[0])
-                        print(f"[{uid}] ✅ Đã xác nhận kết bạn với {target_uid}.")
-                        time.sleep(3)
-                        break
+                confirm_btns = driver.find_elements(By.XPATH, confirm_xpath)
+                if confirm_btns:
+                    # Kích hoạt click bằng JS
+                    driver.execute_script("arguments[0].click();", confirm_btns[0])
+                    print(f"[{uid}] ✅ Đã xác nhận kết bạn với {target_uid}.")
+                    time.sleep(3)
+                    sync['receiver_accepted'].set()
+                    break
+                else:
+                    if attempt < 2:
+                        print(f"[{uid}] ⚠️ Chưa thấy lời mời, F5 và chờ thêm...")
+                        driver.refresh()
+                        time.sleep(8)
                     else:
-                        if attempt < 2:
-                            print(f"[{uid}] ℹ️ Chưa thấy lời mời, F5 và chờ thêm...")
-                            time.sleep(10)
-                            driver.refresh()
-                            time.sleep(8)
-                        else:
-                            print(f"[{uid}] ⚠️ Không tìm thấy lời mời sau nhiều lần thử.")
-                sync['receiver_accepted'].set()
+                        print(f"[{uid}] ❌ Không tìm thấy lời mời kết bạn để xác nhận.")
+                        sync['receiver_accepted'].set() # Vẫn set để luồng chat thử chạy tiếp (có thể đã là bạn mà lỗi dom)
+
 
         # ─── BƯỚC 2: Đồng bộ trước khi nhắn tin ───
         if is_sender:
@@ -265,24 +289,39 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
             print(f"[{uid}] 💬 Bắt đầu tìm khung chat...")
 
         # ─── BƯỚC 3: Mở khung chat ───
-        try:
-            chat_box = WebDriverWait(driver, 3).until(
-                EC.element_to_be_clickable((By.XPATH, chat_box_xpath))
-            )
-            print(f"[{uid}] 💬 Khung chat đã có sẵn.")
-        except Exception:
-            print(f"[{uid}] 🔍 Tìm nút Nhắn tin...")
-            msg_btn = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located(
-                    (By.XPATH, "//div[@aria-label='Message' or @aria-label='Nhắn tin']")
-                )
-            )
-            driver.execute_script("arguments[0].click();", msg_btn)
-            print(f"[{uid}] 💬 Đã nhấn nút Nhắn tin. Chờ khung chat...")
-            time.sleep(5)
-            chat_box = WebDriverWait(driver, 15).until(
-                EC.element_to_be_clickable((By.XPATH, chat_box_xpath))
-            )
+        chat_box = None
+        for attempt in range(3):
+            try:
+                try:
+                    chat_box = WebDriverWait(driver, 3).until(
+                        EC.element_to_be_clickable((By.XPATH, chat_box_xpath))
+                    )
+                    print(f"[{uid}] 💬 Khung chat đã có sẵn.")
+                except Exception:
+                    print(f"[{uid}] 🔍 Tìm nút Nhắn tin (lần {attempt + 1})...")
+                    msg_btn_xpath = "//*[(@aria-label='Message' or @aria-label='Nhắn tin' or starts-with(@aria-label, 'Gửi tin nhắn')) and @role='button']"
+                    msg_btn = WebDriverWait(driver, 10).until(
+                        EC.presence_of_element_located((By.XPATH, msg_btn_xpath))
+                    )
+                    driver.execute_script("arguments[0].click();", msg_btn)
+                    print(f"[{uid}] 💬 Đã nhấn nút Nhắn tin. Chờ khung chat...")
+                    time.sleep(5)
+                    chat_box = WebDriverWait(driver, 10).until(
+                        EC.element_to_be_clickable((By.XPATH, chat_box_xpath))
+                    )
+                
+                if chat_box:
+                    break
+            except Exception as e:
+                if attempt < 2:
+                    print(f"[{uid}] ⚠️ Không mở được khung chat. F5 tải lại trang...")
+                    driver.refresh()
+                    time.sleep(8)
+                else:
+                    print(f"[{uid}] ❌ Thất bại mở khung chat sau 3 lần thử.")
+        
+        if not chat_box:
+            raise Exception("Không thể tìm thấy hoặc mở khung chat.")
 
         chat_box.click()
         demo_msg = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(15))

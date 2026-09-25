@@ -95,8 +95,8 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
         proxy_str = None
         proxy_field = parts[5].strip() if len(parts) > 5 else ""
 
-        # Ưu tiên: dùng proxy từ task_config (cài đặt Settings UI) nếu execution_mode == 1
-        if execution_mode == 1 and task_config:
+        # Ưu tiên: dùng proxy từ task_config (cài đặt Settings UI)
+        if task_config:
             proxy_method = task_config.get("ProxyMethod", 0)
             if proxy_method == 1:  # Tĩnh
                 proxy_list = task_config.get("ProxyList", [])

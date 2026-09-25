@@ -58,7 +58,7 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel>
                                         <TextBlock Text="Thời gian nuôi (phút)" FontSize="12" FontWeight="SemiBold"/>
-                                        <TextBlock Text="Tổng thời gian lướt feed / tài khoản" FontSize="11" Foreground="#888"/>
+                                        <TextBlock Text="Tổng thời gian chạy" FontSize="11" Foreground="#888"/>
                                     </StackPanel>
                                     <Border Grid.Column="1" BorderBrush="#dadce0" BorderThickness="1" Background="White">
                                         <TextBox Text="{Binding FeedTime}" BorderThickness="0" Padding="5" HorizontalContentAlignment="Center" Background="Transparent"/>
