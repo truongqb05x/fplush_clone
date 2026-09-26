@@ -438,6 +438,15 @@ namespace FPlusClone.ViewModels
                                 }
                             }
                             
+                            // Check for UI_LOGIN_FAILED
+                            var loginFailMatch = System.Text.RegularExpressions.Regex.Match(e.Data, @"\[(.*?)\]\s*UI_LOGIN_FAILED");
+                            if (loginFailMatch.Success)
+                            {
+                                string uidStr = loginFailMatch.Groups[1].Value.Trim();
+                                var mainVm = System.Windows.Application.Current.MainWindow?.DataContext as MainViewModel;
+                                mainVm?.UpdateAccountNote(uidStr, "Login Failed");
+                            }
+                            
                             // Check for UI_REMOVE|<uid> — xóa account khỏi list chờ chạy
                             var removeMatch = System.Text.RegularExpressions.Regex.Match(e.Data, @"\[(.*?)\]\s*UI_REMOVE\|(.+)");
                             if (removeMatch.Success)
@@ -449,7 +458,7 @@ namespace FPlusClone.ViewModels
                                     TaskAccounts.Remove(acc);
                                     // Cập nhật Note trong danh sách tài khoản gốc
                                     var mainVm = System.Windows.Application.Current.MainWindow?.DataContext as MainViewModel;
-                                    mainVm?.UpdateAccountNote(uidStr, "Pending comment (bị từ chối/chờ duyệt)");
+                                    mainVm?.UpdateAccountNote(uidStr, "Pending comment");
                                 }
                             }
                         });

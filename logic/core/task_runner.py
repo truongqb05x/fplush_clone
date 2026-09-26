@@ -461,7 +461,8 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                             print(f"[{uid}]  Lỗi khi xóa profile: {e_del}")
                         if login_attempt == 0: continue
                         print(f"[{uid}]  Đã thử lại nhưng vẫn thất bại. Đang xóa tài khoản...")
-                        print(f"[{uid}] UI_STATUS|Die")
+                        #print(f"[{uid}] UI_STATUS|Die")
+                        #print(f"[{uid}] UI_LOGIN_FAILED")
                         is_dead = True
                         if execution_mode != 6: return False
                 else:
@@ -478,6 +479,7 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
                     if login_attempt == 0: continue
                     print(f"[{uid}]  Đã thử lại nhưng vẫn thất bại. Đang xóa tài khoản...")
                     #print(f"[{uid}] UI_STATUS|Die")
+                    print(f"[{uid}] UI_LOGIN_FAILED")
                     is_dead = True
                     if execution_mode != 6: return False
             

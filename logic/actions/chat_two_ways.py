@@ -66,15 +66,25 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
         if not selected_info or len(selected_info) < 2:
             return
 
-        # Tìm uid khác trong batch
-        target_uid = None
+        uids = []
         for line in selected_info:
-            other_uid = line.split("|")[0]
-            if other_uid != uid:
-                target_uid = other_uid
+            parts = line.split("|")
+            if parts:
+                uids.append(parts[0])
+        uids = list(dict.fromkeys(uids)) # Remove duplicates
+
+        target_uid = None
+        for i in range(len(uids)):
+            if uids[i] == uid:
+                if i % 2 == 0:
+                    if i + 1 < len(uids):
+                        target_uid = uids[i+1]
+                else:
+                    target_uid = uids[i-1]
                 break
 
         if not target_uid:
+            print(f"[{uid}] ⚠️ Không tìm thấy đối tác ghép cặp (có thể số lượng tài khoản là số lẻ). Bỏ qua chat 2 chiều.")
             return
 
         # UID nhỏ hơn = sender, lớn hơn = receiver (2 luồng luôn đồng ý)
@@ -331,7 +341,7 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
                     driver.execute_script("arguments[0].click();", msg_btn)
                     print(f"[{uid}] 💬 Đã nhấn nút Nhắn tin. Chờ khung chat hiện lên...")
                     time.sleep(5)
-                    chat_box = WebDriverWait(driver, 10).until(
+                    chat_box = WebDriverWait(driver, 60).until(
                         EC.element_to_be_clickable((By.XPATH, chat_box_xpath))
                     )
                 
@@ -339,14 +349,14 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
                     print(f"[{uid}] ✅ Đã mở được khung chat. Đang đợi đối tác mở thành công...")
                     if is_sender:
                         sync['chat_box_sender'].set()
-                        if sync['chat_box_receiver'].wait(timeout=45):
+                        if sync['chat_box_receiver'].wait(timeout=60):
                             print(f"[{uid}] 🤝 Cả 2 đã mở khung chat. Bắt đầu nhắn tin!")
                             break
                         else:
                             sync['chat_box_sender'].clear()
                     else:
                         sync['chat_box_receiver'].set()
-                        if sync['chat_box_sender'].wait(timeout=45):
+                        if sync['chat_box_sender'].wait(timeout=60):
                             print(f"[{uid}] 🤝 Cả 2 đã mở khung chat. Bắt đầu nhắn tin!")
                             break
                         else:
@@ -366,17 +376,24 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
         # ─── HÀM GỬI TIN NHẮN (dùng chung cho các lượt) ───
         def send_chat_messages(num_msgs):
             for msg_index in range(num_msgs):
+                current_box = None
                 try:
-                    chat_box.click()
+                    current_box = driver.find_element(By.XPATH, chat_box_xpath)
+                    current_box.click()
                 except:
-                    pass
+                    current_box = chat_box
+                    
                 demo_msg = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(random.randint(5, 15)))
                 print(f"[{uid}] ⌨️ Đang gõ tin nhắn {msg_index + 1}/{num_msgs}...")
                 for char in demo_msg:
                     try:
-                        chat_box.send_keys(char)
+                        if current_box: current_box.send_keys(char)
                     except:
-                        pass
+                        try:
+                            current_box = driver.find_element(By.XPATH, chat_box_xpath)
+                            current_box.send_keys(char)
+                        except:
+                            pass
                     time.sleep(random.uniform(0.05, 0.2))
                 time.sleep(1)
                 msg_displayed = False
@@ -387,7 +404,7 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
                     except:
                         from selenium.webdriver.common.keys import Keys
                         try:
-                            chat_box.send_keys(Keys.ENTER)
+                            if current_box: current_box.send_keys(Keys.ENTER)
                         except:
                             pass
                     sent_xpath = f"//*[contains(text(), '{demo_msg}')]"
@@ -439,6 +456,24 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
             sync['turn_4'].set()
 
         print(f"[{uid}] 🏁 Hoàn thành chat tương tác 2 chiều (Ping-Pong). Tiếp tục tác vụ khác...")
+        
+        # Đóng khung chat
+        print(f"[{uid}] 🔒 Đang đóng khung chat...")
+        try:
+            close_xpath = "//*[(@aria-label='Đóng đoạn chat' or @aria-label='Close chat' or contains(@aria-label, 'Đóng')) and @role='button']"
+            close_btns = driver.find_elements(By.XPATH, close_xpath)
+            for btn in close_btns:
+                try:
+                    driver.execute_script("arguments[0].click();", btn)
+                    time.sleep(0.5)
+                except:
+                    try:
+                        btn.click()
+                        time.sleep(0.5)
+                    except:
+                        pass
+        except Exception as e:
+            print(f"[{uid}] ⚠️ Không thể đóng khung chat: {e}")
 
     except Exception as e:
         print(f"[{uid}] ❌ Lỗi chat 2 chiều: {e}")
@@ -452,5 +487,13 @@ def run_two_way_chat(driver=None, uid: str = None, task_config: dict = None, coo
                 if not sync['receiver_accepted'].is_set(): sync['receiver_accepted'].set()
                 if not sync['turn_2'].is_set(): sync['turn_2'].set()
                 if not sync['turn_4'].is_set(): sync['turn_4'].set()
+        except Exception:
+            pass
+    finally:
+        # Xóa tín hiệu để lượt sau (Turn 2, 3...) không bị dính trạng thái cũ
+        try:
+            for key in sync:
+                if hasattr(sync[key], 'clear'):
+                    sync[key].clear()
         except Exception:
             pass
