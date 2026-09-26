@@ -1,0 +1,80 @@
+<Window x:Class="FPlusClone.Views.PostSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Cài đặt đăng bài" Height="450" Width="450"
+        WindowStartupLocation="CenterOwner" Background="#f8f9fa">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="CẤU HÌNH ĐĂNG BÀI" FontSize="16" FontWeight="Bold" Foreground="#333" Margin="0,0,0,15" HorizontalAlignment="Center"/>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Mode Selection -->
+                <GroupBox Header="Chế độ đăng bài" BorderBrush="#ccc" Margin="0,0,0,15" Padding="10">
+                    <StackPanel>
+                        <!-- Manual Mode -->
+                        <RadioButton x:Name="RbManual" Content="Chế độ thủ công" IsChecked="True" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                        <Border Margin="20,0,0,15" IsEnabled="{Binding IsChecked, ElementName=RbManual}">
+                            <StackPanel>
+                                <TextBlock Text="File ảnh:" Margin="0,0,0,5"/>
+                                <Grid Margin="0,0,0,10">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtImagePath" Padding="5" BorderBrush="#dadce0"/>
+                                    <Button Grid.Column="1" Content="..." Width="30" Margin="5,0,0,0" Click="BtnBrowseImage_Click"/>
+                                </Grid>
+
+                                <TextBlock Text="File nội dung (.txt):" Margin="0,0,0,5"/>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <TextBox x:Name="TxtContentPath" Padding="5" BorderBrush="#dadce0"/>
+                                    <Button Grid.Column="1" Content="..." Width="30" Margin="5,0,0,0" Click="BtnBrowseContent_Click"/>
+                                </Grid>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- API Graph Mode -->
+                        <RadioButton x:Name="RbApiGraph" Content="Chế độ API Graph" FontWeight="SemiBold" Margin="0,0,0,10"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- Common Settings -->
+                <GroupBox Header="Tùy chọn chung" BorderBrush="#ccc" Padding="10">
+                    <StackPanel>
+                        <Grid Margin="0,0,0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <CheckBox x:Name="ChkTagFriends" Content="Tag bạn bè" VerticalAlignment="Center"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0" IsEnabled="{Binding IsChecked, ElementName=ChkTagFriends}">
+                                <TextBlock Text="Số lượng:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                                <TextBox Width="50" Padding="2" Text="5" TextAlignment="Center" BorderBrush="#dadce0"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <CheckBox x:Name="ChkCheckIn" Content="Check in (Thêm vị trí ngẫu nhiên/cố định)" Margin="0,0,0,10"/>
+                        
+                        <CheckBox x:Name="ChkFeeling" Content="Thêm cảm xúc (Đang cảm thấy...)" Margin="0,0,0,10"/>
+                    </StackPanel>
+                </GroupBox>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Buttons -->
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="Đóng" Width="80" Height="30" Margin="0,0,10,0" Background="White" BorderBrush="#ccc" Cursor="Hand" Click="BtnClose_Click"/>
+            <Button Content="Lưu cài đặt" Width="100" Height="30" Background="#1a73e8" Foreground="White" BorderThickness="0" Cursor="Hand" Click="BtnSave_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>

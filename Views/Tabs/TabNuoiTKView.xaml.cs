@@ -19,5 +19,11 @@ namespace FPlusClone.Views.Tabs
                 }
             }
         }
+
+        private void BtnPostSettings_Click(object sender, RoutedEventArgs e)
+        {
+            var settingsWindow = new PostSettingsWindow();
+            settingsWindow.ShowDialog();
+        }
     }
 }
