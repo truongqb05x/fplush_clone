@@ -15,6 +15,7 @@ namespace FPlusClone.Views.Tabs
                 if (DataContext is TabNuoiTKViewModel vm && vm.StopTaskCommand.CanExecute(null))
                 {
                     vm.StopTaskCommand.Execute(null);
+                    MessageBox.Show("Đã dừng tiến trình thành công!", "Thông báo", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
         }
