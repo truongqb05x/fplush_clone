@@ -7,3 +7,15 @@ __pycache__/
 *.pyc
 publish_output/
 *.zip
+
+# C# / Visual Studio
+bin/
+obj/
+.vs/
+*.user
+
+# Python Runtime Data
+temp_images/
+.env
+venv/
+env/
