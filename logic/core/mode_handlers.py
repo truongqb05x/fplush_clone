@@ -55,6 +55,10 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
                         pass
                 
                 mode = post_config.get("Mode", 1) # 1: Thủ công, 2: API
+                is_feeling = post_config.get("IsFeeling", True)
+                is_checkin = post_config.get("IsCheckIn", True)
+                is_tag = post_config.get("IsTagFriends", True)
+                
                 if mode == 1:
                     content = None
                     txt_path = post_config.get("ContentPath", "")
@@ -68,7 +72,7 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
                     if not img_path or not os.path.exists(img_path):
                         img_path = None
                     
-                    post_manual_content(driver, uid, post_content=content, image_path=img_path)
+                    post_manual_content(driver, uid, post_content=content, image_path=img_path, is_feeling=is_feeling, is_checkin=is_checkin, is_tag=is_tag)
                 elif mode == 2:
                     print(f"[{uid}] Lấy bài viết ngẫu nhiên từ API Graph...")
                     target_uid = "100072095290428"
@@ -76,10 +80,10 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
                     post_data = get_random_post(target_uid, access_token)
                     if post_data:
                         print(f"[{uid}] Bài viết lấy được từ API: {post_data['message'][:30]}...")
-                        post_manual_content(driver, uid, post_content=post_data["message"], image_path=post_data["image_path"])
+                        post_manual_content(driver, uid, post_content=post_data["message"], image_path=post_data["image_path"], is_feeling=is_feeling, is_checkin=is_checkin, is_tag=is_tag)
                     else:
                         print(f"[{uid}] Lỗi lấy từ API, chuyển về mặc định...")
-                        post_manual_content(driver, uid)
+                        post_manual_content(driver, uid, is_feeling=is_feeling, is_checkin=is_checkin, is_tag=is_tag)
             except Exception as e:
                 print(f"[{uid}] Lỗi chạy chức năng đăng bài: {e}")
                 

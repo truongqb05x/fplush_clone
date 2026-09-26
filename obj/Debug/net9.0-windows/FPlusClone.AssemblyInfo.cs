@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("FacebookAccountManager")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+f910317fd989f32297ced8c22b2f394b6e75020d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+08ad1bf06c5c8f3a39930b7abacad0a48f92a5bc")]
 [assembly: System.Reflection.AssemblyProductAttribute("FacebookAccountManager")]
 [assembly: System.Reflection.AssemblyTitleAttribute("FacebookAccountManager")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
