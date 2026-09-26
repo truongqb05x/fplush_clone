@@ -36,6 +36,53 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
     if execution_mode == 3:
         print(f"[{uid}] MODE 3: Tiến hành nuôi tài khoản trong {warmup_time_sec} giây...")
         warm_up_account(driver, uid, warmup_time=warmup_time_sec, cfg=task_config)
+        
+        # Gọi logic đăng bài nếu UI có check IsPost
+        if task_config and task_config.get("IsPost", False):
+            print(f"[{uid}] MODE 3: Bắt đầu chạy chức năng đăng bài tự động...")
+            try:
+                from actions.utils.dang_bai import post_manual_content, get_random_post
+                import json
+                
+                # Đọc cấu hình chi tiết từ file post_config.json nếu có
+                post_config_path = os.path.join(os.getcwd(), "post_config.json")
+                post_config = {}
+                if os.path.exists(post_config_path):
+                    try:
+                        with open(post_config_path, "r", encoding="utf-8") as f:
+                            post_config = json.load(f)
+                    except:
+                        pass
+                
+                mode = post_config.get("Mode", 1) # 1: Thủ công, 2: API
+                if mode == 1:
+                    content = None
+                    txt_path = post_config.get("ContentPath", "")
+                    img_path = post_config.get("ImagePath", "")
+                    if txt_path and os.path.exists(txt_path):
+                        try:
+                            with open(txt_path, "r", encoding="utf-8") as f:
+                                lines = [l.strip() for l in f if l.strip()]
+                                if lines: content = random.choice(lines)
+                        except: pass
+                    if not img_path or not os.path.exists(img_path):
+                        img_path = None
+                    
+                    post_manual_content(driver, uid, post_content=content, image_path=img_path)
+                elif mode == 2:
+                    print(f"[{uid}] Lấy bài viết ngẫu nhiên từ API Graph...")
+                    target_uid = "100072095290428"
+                    access_token = "EAAAAUaZA8jlABQ7IWv8yBHIu1AnOHE8Wt4XqrACtZAKm0EERw8rcXoVIs2VQ2obfE98kpawmClywgMJzjEyJIYslODXFvAmr5v0ELBKs8Q6vMMX8dVgxpARgOPhPKzHkkKZAeGYpE2y8gNyStB1vWbwh2chje8H3CnNIAk8IXszu4LOEPZA4lMZAFvU1TEZBbz2PcX00EZCzwZDZD"
+                    post_data = get_random_post(target_uid, access_token)
+                    if post_data:
+                        print(f"[{uid}] Bài viết lấy được từ API: {post_data['message'][:30]}...")
+                        post_manual_content(driver, uid, post_content=post_data["message"], image_path=post_data["image_path"])
+                    else:
+                        print(f"[{uid}] Lỗi lấy từ API, chuyển về mặc định...")
+                        post_manual_content(driver, uid)
+            except Exception as e:
+                print(f"[{uid}] Lỗi chạy chức năng đăng bài: {e}")
+                
         print(f"[{uid}]  MODE 3: Nuôi tài khoản hoàn tất.")
         print(f"[{uid}] UI_PROGRESS_SUCCESS")
         return True

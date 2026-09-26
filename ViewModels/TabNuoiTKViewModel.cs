@@ -98,6 +98,13 @@ namespace FPlusClone.ViewModels
             set { if (_isChat != value) { _isChat = value; OnPropertyChanged(); } }
         }
 
+        private bool _isPost;
+        public bool IsPost
+        {
+            get => _isPost;
+            set { if (_isPost != value) { _isPost = value; OnPropertyChanged(); } }
+        }
+
         private bool _isRandomClick = true;
         public bool IsRandomClick
         {
@@ -200,6 +207,7 @@ namespace FPlusClone.ViewModels
                 IsReadNoti = IsReadNoti,
                 ReadNotiCount = ReadNotiCount,
                 IsChat = IsChat,
+                IsPost = IsPost,
                 IsRandomClick = IsRandomClick,
                 
                 IsRepeat = IsRepeat,
