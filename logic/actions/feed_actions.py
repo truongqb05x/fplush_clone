@@ -3,9 +3,9 @@ import time
 import random
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.action_chains import ActionChains
-from actions.like_actions import random_like_post
-from actions.read_notifications import read_one_random_notification
-from actions.chat_two_ways import run_two_way_chat
+from actions.utils.like_actions import random_like_post
+from actions.utils.read_notifications import read_one_random_notification
+from actions.utils.chat_two_ways import run_two_way_chat
 
 def warm_up_account(driver, uid, warmup_time=None, cfg=None):
     if warmup_time is None:

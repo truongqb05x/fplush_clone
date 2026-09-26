@@ -39,8 +39,8 @@ from actions.login import login_with_credentials
 from actions.join_groups import join_single_group
 from actions.out_group import out_groups_by_mode
 from actions.TTC.get_job import fetch_ttc_jobs
-from actions.read_notifications import read_one_random_notification
-from actions.chat_two_ways import run_two_way_chat
+from actions.utils.read_notifications import read_one_random_notification
+from actions.utils.chat_two_ways import run_two_way_chat
 
 
 from core.globals import *

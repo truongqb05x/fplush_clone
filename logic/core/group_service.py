@@ -16,7 +16,7 @@ from utils.helpers import (
     is_checkpoint, is_soft_checkpoint, safe_url, type_human_like,
     is_logged_out
 )
-from actions.like_actions import random_like_post
+from actions.utils.like_actions import random_like_post
 from actions.join_groups import join_single_group
 
 def close_obstructing_modals(driver, uid):

@@ -12,8 +12,8 @@ from actions.feed_actions import warm_up_account
 from core.automation_service import process_keyword_search, process_page_cycle, process_ttc_cycle, process_group_cycle
 from actions.join_groups import join_single_group
 from actions.out_group import out_groups_by_mode
-from actions.read_notifications import read_one_random_notification
-from actions.chat_two_ways import run_two_way_chat
+from actions.utils.read_notifications import read_one_random_notification
+from actions.utils.chat_two_ways import run_two_way_chat
 from actions.login import login_with_credentials
 from utils.scan_group import get_joined_groups
 
