@@ -390,13 +390,11 @@ def run_account_task(cookie_line, thread_index, max_comments, is_edit_comment="y
             login_verified = verify_uid(driver, uid)
             
             if not login_verified:
-                print(f"[{uid}] 🔎 Chưa xác minh được UID, đang thử chuyển hướng đến /me...")
                 driver.get("https://www.facebook.com/me")
                 time.sleep(5)
                 login_verified = verify_uid(driver, uid)
     
             if not login_verified:
-                print(f"[{uid}]  Session hết hạn hoặc UID không khớp. Tiến hành login bằng Username/Password...")
                 password = parts[1] if len(parts) > 1 else ""
                 if login_with_credentials(driver, uid, password):
                     time.sleep(5)

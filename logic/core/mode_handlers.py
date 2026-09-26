@@ -337,16 +337,18 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
         g_list = task_config.get("GroupUids", [])
         
         if task_config.get("ActionBeforePost"):
-            print(f"[{uid}]  Thực hiện hành động TRƯỚC khi post...")
             cfg = task_config.get("ConfigBeforePost", {})
             if cfg.get("IsScrollFeed"):
+                print(f"[{uid}]  Thực hiện hành động TRƯỚC khi post: Lướt Newfeed")
                 feed_time = cfg.get("ScrollTimeMax", 60)
                 warm_up_account(driver, uid, warmup_time=feed_time, cfg=cfg)
             if cfg.get("IsReadNotifications"):
+                print(f"[{uid}]  Thực hiện hành động TRƯỚC khi post: Đọc thông báo")
                 count = cfg.get("ReadNotificationsCount", 1)
                 for _ in range(count):
                     read_one_random_notification(driver, uid)
             if cfg.get("IsChatWithEachOther"):
+                print(f"[{uid}]  Thực hiện hành động TRƯỚC khi post: Nhắn tin 2 chiều")
                 run_two_way_chat(driver=driver, uid=uid, task_config=task_config)
                 
     else:
@@ -464,16 +466,18 @@ def dispatch_execution_mode(driver, wait, uid, execution_mode, max_comments, is_
                 
                 # ACTION SAU KHI POST
                 if execution_mode == 1 and task_config and task_config.get("ActionAfterPost"):
-                    print(f"[{uid}]  Thực hiện hành động SAU khi post...")
                     cfg = task_config.get("ConfigAfterPost", {})
                     if cfg.get("IsScrollFeed"):
+                        print(f"[{uid}]  Thực hiện hành động SAU khi post: Lướt Newfeed")
                         feed_time = cfg.get("ScrollTimeMax", 60)
                         warm_up_account(driver, uid, warmup_time=feed_time, cfg=cfg)
                     if cfg.get("IsReadNotifications"):
+                        print(f"[{uid}]  Thực hiện hành động SAU khi post: Đọc thông báo")
                         count = cfg.get("ReadNotificationsCount", 1)
                         for _ in range(count):
                             read_one_random_notification(driver, uid)
                     if cfg.get("IsChatWithEachOther"):
+                        print(f"[{uid}]  Thực hiện hành động SAU khi post: Nhắn tin 2 chiều")
                         run_two_way_chat(driver=driver, uid=uid, task_config=task_config)
                         
                 break

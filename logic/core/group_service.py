@@ -17,6 +17,7 @@ from utils.helpers import (
     is_logged_out
 )
 from actions.like_actions import random_like_post
+from actions.join_groups import join_single_group
 
 def close_obstructing_modals(driver, uid):
     try:
@@ -163,6 +164,11 @@ def process_group_cycle(driver, uid, group_id, is_edit_comment="yes", task_confi
             time.sleep(2)
             
         if not group_clicked:
+            # Nếu không tìm thấy trong danh sách đã tham gia, thử kiểm tra và tham gia nhóm
+            print(f"[{uid}] Không tìm thấy trong danh sách nhóm đã tham gia. Tiến hành kiểm tra và tham gia...")
+            join_single_group(driver, None, uid, g_id)
+            time.sleep(2)
+            
             script_target = f"""
                 var a = document.createElement('a');
                 a.href = '{target_url}';
